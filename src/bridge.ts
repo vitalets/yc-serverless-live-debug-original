@@ -3,9 +3,9 @@
  * from stub to local and back.
  */
 
-import fetch from 'node-fetch';
 import { Handler } from '@yandex-cloud/function-types';
 import Context from '@yandex-cloud/function-types/dist/src/context.js';
+import { sendToConnection } from './helpers/apigw.js';
 import { AckMessage, LocalRegister, LocalResponse, Message, StubRequest } from './helpers/protocol.js';
 import * as ydb from './helpers/ydb.js';
 
@@ -74,28 +74,10 @@ function getWsReq(event: HttpEvent, context: Context): WsReq {
     };
 }
 
-/**
- * Send message to WS connection.
- * See: https://cloud.yandex.ru/docs/api-gateway/apigateway/websocket/api-ref/Connection/send
- */
-async function sendToConnection(connectionId: string, message: Message, token: string) {
-  const method = 'POST';
-  const url = `https://apigateway-connections.api.cloud.yandex.net/apigateways/websocket/v1/connections/${connectionId}/:send`;
-  const headers = {
-    Authorization: `Bearer ${token}`,
-  };
-  const messageStr = JSON.stringify(message);
-  const body = JSON.stringify({
-    type: 'TEXT',
-    data: Buffer.from(messageStr, 'utf8').toString('base64'),
-  });
-  const res = await fetch(url, { method, headers, body });
-  if (!res.ok) throw new Error(await res.text());
-}
-
 async function handleHttp(context: Context) {
   try {
-    const connections = await ydb.getConnections(context.token?.access_token || '')
+    const token = context.token?.access_token || '';
+    const connections = await ydb.getConnections(token);
     return buildFnResponse(
       `Live debug bridge is running. Local connections: ${connections}`
     );
