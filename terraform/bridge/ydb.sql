@@ -1,10 +1,10 @@
 CREATE TABLE `connections` (
     `connectionId` Utf8,
-    `topic` Utf8,
+    `stubId` Utf8,
     `createdAt` Timestamp,
     PRIMARY KEY (`connectionId`),
-    INDEX topicIndex GLOBAL ON (topic),
+    INDEX stubIdIndex GLOBAL ON (stubId),
     INDEX createdAtIndex GLOBAL ON (createdAt)
 ) WITH (
-  TTL = Interval("P1D") ON createdAt
+  TTL = Interval("P1H") ON createdAt
 );

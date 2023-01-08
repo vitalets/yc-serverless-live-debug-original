@@ -1,5 +1,9 @@
 output "ws_url" {
-  value = "https://${yandex_api_gateway.bridge.domain}/ws"
+  value = "wss://${yandex_api_gateway.bridge.domain}/ws"
+}
+
+output "status_url" {
+  value = "https://${yandex_api_gateway.bridge.domain}"
 }
 
 output "ydb_path" {

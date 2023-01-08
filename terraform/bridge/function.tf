@@ -15,7 +15,7 @@ resource "yandex_function" "bridge" {
   runtime            = "nodejs16"
   entrypoint         = "bridge.handler"
   memory             = 128
-  execution_timeout  = 30
+  execution_timeout  = 10
   content {
     zip_filename = data.archive_file.zip.output_path
   }

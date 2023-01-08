@@ -23,10 +23,18 @@ module "stub" {
   bridge_ws_url = module.bridge.ws_url
 }
 
+output "stub_url" {
+  value = module.stub.stub_url
+}
+
+output "stub_id" {
+  value = module.stub.stub_fn_id
+}
+
 output "brigde_ws_url" {
   value = module.bridge.ws_url
 }
 
-output "stub_fn_id" {
-  value = module.stub.stub_fn_id
+output "brigde_status_url" {
+  value = module.bridge.status_url
 }

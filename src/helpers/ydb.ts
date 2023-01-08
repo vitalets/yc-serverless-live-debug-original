@@ -1,4 +1,8 @@
-import { Driver, TokenAuthService, TypedData, TypedValues } from 'ydb-sdk';
+/**
+ * YDB wrapper.
+ */
+import { Driver, Session, TokenAuthService, TypedData, TypedValues } from 'ydb-sdk';
+import { logger } from './logger';
 
 const YDB_ENDPOINT = 'grpcs://ydb.serverless.yandexcloud.net:2135';
 const YDB_PATH = process.env.YDB_PATH;
@@ -10,70 +14,82 @@ type Connection = {
   createdAt: string,
 };
 
-export async function getConnectionId(topic: string, token: string) {
-  const driver = await getYdbDriver(token);
-  const query = `
-    DECLARE $topic AS Utf8;
+export class Ydb {
+  constructor(protected token: string) {}
 
-    SELECT connectionId FROM connections WHERE topic = $topic
-    ORDER BY createdAt DESC
-    LIMIT 1
-  `;
-  const resultSets = await driver.tableClient.withSession(async session => {
-    const preparedQuery = await session.prepareQuery(query);
-    const params = {
-      '$topic': TypedValues.utf8(topic),
-    };
-    const { resultSets } = await session.executeQuery(preparedQuery, params);
-    return resultSets;
-  });
-  const rows = TypedData.createNativeObjects(resultSets[0]) as unknown as Connection[];
-  return rows[0]?.connectionId || '';
-}
+  async getConnectionId(stubId: string) {
+    const query = `
+      DECLARE $stubId AS Utf8;
 
-export async function saveConnectionId(topic: string, connectionId: string, token: string) {
-  const driver = await getYdbDriver(token);
-  const query = `
-    DECLARE $connectionId AS Utf8;
-    DECLARE $topic AS Utf8;
-
-    INSERT INTO connections (connectionId, topic, createdAt)
-    VALUES ($connectionId, $topic, CurrentUtcTimestamp());
-  `;
-  const resultSets = await driver.tableClient.withSession(async session => {
-    const preparedQuery = await session.prepareQuery(query);
-    const params = {
-      '$connectionId': TypedValues.utf8(connectionId),
-      '$topic': TypedValues.utf8(topic),
-    };
-    const { resultSets } = await session.executeQuery(preparedQuery, params);
-    return resultSets;
-  });
-  console.log(resultSets);
-}
-
-export async function getConnections(token: string) {
-  const driver = await getYdbDriver(token);
-  const query = `SELECT connectionId, topic, createdAt FROM connections`;
-  const resultSets = await driver.tableClient.withSession(async session => {
-    const { resultSets } = await session.executeQuery(query);
-    return resultSets;
-  });
-  const rows = TypedData.createNativeObjects(resultSets[0]) as unknown as Connection[];
-  return rows.length;
-}
-
-async function getYdbDriver(token: string) {
-  ydbDriver = ydbDriver || new Driver({
-    endpoint: YDB_ENDPOINT,
-    database: YDB_PATH,
-    authService: new TokenAuthService(token)
-  });
-
-  if (!await ydbDriver.ready(3000)) {
-    console.log(`Driver has not become ready in allowed time!`);
-    process.exit(1);
+      SELECT connectionId, createdAt FROM connections WHERE stubId = $stubId
+      ORDER BY createdAt DESC
+      LIMIT 1
+    `;
+    const resultSets = await this.withSession(async session => {
+      const preparedQuery = await session.prepareQuery(query);
+      const params = {
+        '$stubId': TypedValues.utf8(stubId),
+      };
+      const { resultSets } = await session.executeQuery(preparedQuery, params);
+      return resultSets;
+    });
+    const rows = TypedData.createNativeObjects(resultSets[0]) as unknown as Connection[];
+    return rows[0]?.connectionId || '';
   }
 
-  return ydbDriver;
+  async saveConnectionId(stubId: string, connectionId: string) {
+    const query = `
+      DECLARE $connectionId AS Utf8;
+      DECLARE $stubId AS Utf8;
+
+      INSERT INTO connections (connectionId, stubId, createdAt)
+      VALUES ($connectionId, $stubId, CurrentUtcTimestamp());
+    `;
+    const result = await this.withSession(async session => {
+      const preparedQuery = await session.prepareQuery(query);
+      const params = {
+        '$connectionId': TypedValues.utf8(connectionId),
+        '$stubId': TypedValues.utf8(stubId),
+      };
+      return session.executeQuery(preparedQuery, params);
+    });
+    console.log(result);
+  }
+
+  async getConnections() {
+    const query = `
+      SELECT connectionId, stubId, createdAt FROM connections;
+    `;
+    const resultSets = await this.withSession(async session => {
+      const { resultSets } = await session.executeQuery(query);
+      return resultSets;
+    });
+    const rows = TypedData.createNativeObjects(resultSets[0]) as unknown as Connection[];
+    return rows;
+  }
+
+  protected async withSession<T>(callback: (session: Session) => Promise<T>) {
+    const driver = await this.getDriver();
+    return driver.tableClient.withSession(callback);
+  }
+
+  protected async getDriver() {
+    ydbDriver = ydbDriver || new Driver({
+      endpoint: YDB_ENDPOINT,
+      database: YDB_PATH,
+      authService: new TokenAuthService(this.token)
+    });
+
+    if (!await ydbDriver.ready(3000)) {
+      throw new Error(`YDB driver has not become ready in allowed time!`);
+    }
+
+    return ydbDriver;
+  }
 }
+
+export async function ensureTable() {
+  // todo: create table dynamically by http route
+}
+
+

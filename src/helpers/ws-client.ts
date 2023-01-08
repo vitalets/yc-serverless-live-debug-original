@@ -2,7 +2,8 @@
  * WebSocket client wrapper.
  */
 import WebSocket from 'ws';
-import { Message } from './protocol.js';
+import { Message } from './protocol';
+import { logger } from './logger';
 
 type WaitFn = (message: Message) => unknown;
 type WaitFnData = {
@@ -17,8 +18,11 @@ export class WsClient {
   constructor(protected wsUrl: string, protected topic = 'default') {}
 
   async ensureConnected() {
-    if (this.ws?.readyState === WebSocket.OPEN) return;
-    return new Promise(resolve => {
+    if (this.ws?.readyState === WebSocket.OPEN) {
+      logger.info(`WS connection already opened`);
+      return;
+    }
+    await new Promise(resolve => {
       this.ws = new WebSocket(this.wsUrl);
       this.ws.on('open', resolve);
       this.ws.on('message', message => this.onMessage(message));
@@ -26,10 +30,13 @@ export class WsClient {
       // todo: connection error
       // todo: timeout
     });
+    logger.info(`WS connection opened`);
   }
 
   async sendJson(message: Message) {
-    this.ws?.send(JSON.stringify(message));
+    const strMessage = JSON.stringify(message);
+    logger.debug(`WS ->: ${strMessage}`);
+    this.ws?.send(strMessage);
   }
 
   clearListeners() {
@@ -44,8 +51,8 @@ export class WsClient {
   }
 
   protected onMessage(message: WebSocket.RawData) {
-    if (typeof message !== 'string') return;
-    const jsonMessage = JSON.parse(message) as Message;
+    logger.debug(`WS <-: ${message}`);
+    const jsonMessage = JSON.parse(message.toString()) as Message;
     this.waitFns.forEach(({ resolve, reject }, fn) => {
       if (!fn(jsonMessage)) return;
       if (jsonMessage.type === 'ack' && jsonMessage.error) {
@@ -57,6 +64,7 @@ export class WsClient {
   }
 
   protected onClose(code: number, reason: Buffer) {
+    logger.info(`WS connection closed`);
     // todo: remove listeners
   }
 }

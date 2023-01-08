@@ -4,12 +4,13 @@
  */
 
 import { Handler } from '@yandex-cloud/function-types';
-import Context from '@yandex-cloud/function-types/dist/src/context.js';
-import { sendToConnection } from './helpers/apigw.js';
-import { AckMessage, LocalRegister, LocalResponse, Message, StubRequest } from './helpers/protocol.js';
-import * as ydb from './helpers/ydb.js';
+import { sendToConnection } from './helpers/ws-apigw';
+import { AckMessage, ClientRegister, ClientResponse, Message, StubRequest } from './helpers/protocol';
+import { Ydb } from './helpers/ydb';
+import { logger } from './helpers/logger';
 
 type HttpEvent = Parameters<Handler.Http>[0];
+type Context = Parameters<Handler.Http>[1];
 type WsReq = {
   connectionId: string,
   eventType: string,
@@ -18,78 +19,102 @@ type WsReq = {
 }
 
 export const handler: Handler.Http = async (event, context) => {
+  logger.info(`Got event: ${JSON.stringify(event)}`);
   const wsReq = getWsReq(event, context);
-  return wsReq.connectionId ? handleWs(wsReq) : handleHttp(context);
+  const response = wsReq.connectionId
+    ? await handleWsReq(wsReq)
+    : await handleHttpReq(context);
+  logger.info(`Got response: ${JSON.stringify(response)}`);
+  return response;
 }
 
-async function handleWs(wsReq: WsReq) {
-  if (wsReq.eventType !== 'MESSAGE') {
-    throw new Error(`Unsupported ws event ${wsReq.eventType}`);
+async function handleWsReq(wsReq: WsReq) {
+  if (wsReq.eventType === 'MESSAGE') {
+    const message = JSON.parse(wsReq.event.body) as Message;
+    return handleWsMessage(wsReq, message);
   }
-  const message = JSON.parse(wsReq.event.body) as Message;
+  throw new Error(`Unsupported ws event ${wsReq.eventType}`);
+}
+
+async function handleWsMessage(wsReq: WsReq, message: Message) {
+  logger.info(message.type, JSON.stringify(message));
   try {
     switch (message.type) {
-      case 'local.register': return await handleLocalRegister(wsReq, message);
       case 'stub.request': return await handleStubRequest(wsReq, message);
-      case 'local.response': return await handleLocalResponse(wsReq, message);
+      case 'client.register': return await handleClientRegister(wsReq, message);
+      case 'client.response': return await handleClientResponse(wsReq, message);
       default: throw new Error(`Unsupported message type: ${message.type}`);
     }
   } catch (e) {
+    logger.error(e.stack, `BODY: ${wsReq.event.body}`);
     return buildWsErrorResponse(e, message);
   }
 }
 
-async function handleLocalRegister(wsReq: WsReq, { topic, reqId }: LocalRegister) {
-  await ydb.saveConnectionId(topic, wsReq.connectionId, wsReq.token);
+async function handleClientRegister(wsReq: WsReq, { stubId, reqId }: ClientRegister) {
+  await new Ydb(wsReq.token).saveConnectionId(stubId, wsReq.connectionId);
   return buildFnResponse(<AckMessage>{
     type: 'ack',
-    topic,
+    stubId,
     reqId,
   });
 }
 
 async function handleStubRequest(wsReq: WsReq, message: StubRequest) {
-  const localConnectionId = await ydb.getConnectionId(message.topic, wsReq.token);
-  if (!localConnectionId) {
-    throw new Error(`No local connection for topic: ${message.topic}`);
+  const clientConnectionId = await new Ydb(wsReq.token).getConnectionId(message.stubId);
+  if (!clientConnectionId) {
+    throw new Error(`No local client connections for stub: ${message.stubId}`);
   }
   message.replyTo = wsReq.connectionId;
-  await sendToConnection(localConnectionId, message, wsReq.token);
+  try {
+    await sendToConnection(clientConnectionId, message, wsReq.token);
+  } catch (e) {
+    // todo: use error.code
+    if (e.message.includes(`connection with id ${clientConnectionId} not found`)) {
+      throw new Error(`Please run client on localhost.`);
+    } else {
+      throw e;
+    }
+  }
+
+  // todo: handle staled client connection
   return buildFnResponse();
 }
 
-async function handleLocalResponse(wsReq: WsReq, message: LocalResponse) {
+async function handleClientResponse(wsReq: WsReq, message: ClientResponse) {
   await sendToConnection(message.replyTo, message, wsReq.token);
+  // todo: handle staled stub connection
   return buildFnResponse();
 }
 
-function getWsReq(event: HttpEvent, context: Context): WsReq {
-    // @ts-expect-error see https://github.com/yandex-cloud/function-ts-types/issues/8
-    const { connectionId = '', eventType } = event.requestContext;
-    return {
-      connectionId,
-      eventType,
-      token: context.token?.access_token || '',
-      event,
-    };
-}
-
-async function handleHttp(context: Context) {
+async function handleHttpReq(context: Context) {
   try {
     const token = context.token?.access_token || '';
-    const connections = await ydb.getConnections(token);
+    const connections = await new Ydb(token).getConnections();
     return buildFnResponse(
-      `Live debug bridge is running. Local connections: ${connections}`
+      `Live debug bridge is running. Local connections: ${connections.length}`
     );
   } catch (e) {
+    logger.error(e.stack);
     return buildHttpErrorResponse(e);
   }
 }
 
-function buildWsErrorResponse(e: Error, { topic, reqId }: Message) {
+function getWsReq(event: HttpEvent, context: Context): WsReq {
+  // @ts-expect-error see https://github.com/yandex-cloud/function-ts-types/issues/8
+  const { connectionId = '', eventType } = event.requestContext;
+  return {
+    connectionId,
+    eventType,
+    token: context.token?.access_token || '',
+    event,
+  };
+}
+
+function buildWsErrorResponse(e: Error, { stubId, reqId }: Message) {
   return buildFnResponse(<AckMessage>{
     type: 'ack',
-    topic,
+    stubId,
     reqId,
     error: {
       code: 'error', // todo

@@ -15,7 +15,7 @@ resource "yandex_function" "stub" {
   runtime            = "nodejs16"
   entrypoint         = "stub.handler"
   memory             = 128
-  execution_timeout  = 30
+  execution_timeout  = 60
   content {
     zip_filename = data.archive_file.zip.output_path
   }
