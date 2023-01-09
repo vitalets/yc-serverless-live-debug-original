@@ -1,6 +1,7 @@
 /**
  * WebSocket client wrapper.
  */
+import http from 'node:http';
 import WebSocket from 'ws';
 import { Message } from './protocol';
 import { logger } from './logger';
@@ -13,18 +14,22 @@ type WaitFnData = {
 
 export class WsClient {
   ws!: WebSocket;
+  connectionId = '';
+  onJsonMessage?: (message: Message) => unknown;
+
   protected waitFns = new Map<WaitFn, WaitFnData>();
 
-  constructor(protected wsUrl: string, protected topic = 'default') {}
+  constructor(protected wsUrl: string) {}
 
   async ensureConnected() {
     if (this.ws?.readyState === WebSocket.OPEN) {
-      logger.info(`WS connection already opened`);
+      logger.info(`WS connection already open`);
       return;
     }
     await new Promise(resolve => {
       this.ws = new WebSocket(this.wsUrl);
       this.ws.on('open', resolve);
+      this.ws.on('upgrade', req => this.onUpgrade(req));
       this.ws.on('message', message => this.onMessage(message));
       this.ws.on('close', (code, reason) => this.onClose(code, reason));
       // todo: connection error
@@ -61,6 +66,11 @@ export class WsClient {
         resolve(jsonMessage);
       }
     });
+    this.onJsonMessage?.(jsonMessage);
+  }
+
+  protected onUpgrade(req: http.IncomingMessage) {
+    this.connectionId = <string>req.headers['x-yc-apigateway-websocket-connection-id'];
   }
 
   protected onClose(code: number, reason: Buffer) {

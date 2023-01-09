@@ -1,14 +1,15 @@
 /**
  * Local client that receives WebSocket message, runs local code
- * and sends result back to WebSocket.
+ * and sends result back to stub function.
  */
 
-import { ClientRegister, ClientResponse, Payload, StubRequest } from './helpers/protocol';
+import { ClientRegister, ClientResponse, StubRequest } from './helpers/protocol';
 import { WsClient } from './helpers/ws-client';
 import { logger } from './helpers/logger';
+import { sendToConnection } from './helpers/ws-apigw';
 
 export type LocalClientOptions = {
-  bridgeWsUrl: string,
+  wsUrl: string,
   stubId: string,
   handler: Function,
 }
@@ -17,18 +18,13 @@ export class LocalClient {
   wsClient: WsClient;
 
   constructor(protected options: LocalClientOptions) {
-    this.wsClient = new WsClient(options.bridgeWsUrl);
+    this.wsClient = new WsClient(options.wsUrl);
   }
 
   async run() {
     await this.wsClient.ensureConnected();
     await this.register();
-    while (true) {
-      // todo: subscribe instead of async loop
-      const request = await this.waitRequest();
-      const responsePayload = await this.getResponsePayload(request);
-      this.sendResponse(request, responsePayload);
-    }
+    this.waitRequests();
   }
 
   close() {
@@ -41,8 +37,10 @@ export class LocalClient {
   }
 
   protected async register() {
+    logger.info('Registering local client...');
     const message: ClientRegister = {
       type: 'client.register',
+      wsUrl: this.wsClient.ws.url,
       stubId: this.options.stubId,
       reqId: Date.now().toString(),
     };
@@ -51,13 +49,14 @@ export class LocalClient {
     logger.info('Local client registered');
   }
 
-  protected async waitRequest() {
-    logger.info(`\nWaiting request from stub...`);
-    const request = await this.wsClient.waitMessage(
-      m => m.type === 'stub.request'
-    ) as StubRequest;
-    logger.info(`Got request from stub: ${request.reqId}`);
-    return request;
+  protected waitRequests() {
+    logger.info(`Waiting requests from stub...`);
+    this.wsClient.onJsonMessage = async message => {
+      if (message.type !== 'stub.request') return;
+      logger.info(`Got request from stub: ${message.reqId}`);
+      const responsePayload = await this.getResponsePayload(message);
+      await this.sendResponse(message, responsePayload);
+    };
   }
 
   protected async getResponsePayload(request: StubRequest) {
@@ -66,7 +65,7 @@ export class LocalClient {
       logger.info(`Waiting response from local code...`);
       const payload = await this.options.handler(event, context);
       logger.info(`Got response from local code`);
-      return payload;
+      return payload as ClientResponse['payload'];
     } catch (e) {
       logger.error(e);
       return {
@@ -76,15 +75,14 @@ export class LocalClient {
     }
   }
 
-  protected async sendResponse(request: StubRequest, payload: Payload) {
-    const message: ClientResponse = {
+  protected async sendResponse(message: StubRequest, payload: ClientResponse['payload']) {
+    const response: ClientResponse = {
       type: 'client.response',
-      stubId: request.stubId,
-      reqId: request.reqId,
-      replyTo: request.replyTo,
+      stubId: message.stubId,
+      reqId: message.reqId,
       payload,
     };
-    this.wsClient.sendJson(message);
+    await sendToConnection(message.stubConnectionId, response, message.token);
     logger.info('Response sent');
   }
 }

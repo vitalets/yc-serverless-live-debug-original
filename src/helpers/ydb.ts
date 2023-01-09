@@ -9,19 +9,21 @@ const YDB_PATH = process.env.YDB_PATH;
 let ydbDriver: Driver;
 
 type Connection = {
+  stubId: string,
   connectionId: string,
-  topic: string,
+  wsUrl: string,
   createdAt: string,
 };
 
 export class Ydb {
   constructor(protected token: string) {}
 
-  async getConnectionId(stubId: string) {
+  async getConnection(stubId: string) {
     const query = `
       DECLARE $stubId AS Utf8;
 
-      SELECT connectionId, createdAt FROM connections WHERE stubId = $stubId
+      SELECT connectionId, wsUrl, createdAt
+      FROM connections WHERE stubId = $stubId
       ORDER BY createdAt DESC
       LIMIT 1
     `;
@@ -34,38 +36,28 @@ export class Ydb {
       return resultSets;
     });
     const rows = TypedData.createNativeObjects(resultSets[0]) as unknown as Connection[];
-    return rows[0]?.connectionId || '';
+    return rows.length ? rows[0] : undefined;
   }
 
-  async saveConnectionId(stubId: string, connectionId: string) {
+  async saveConnection(stubId: string, connectionId: string, wsUrl: string) {
     const query = `
-      DECLARE $connectionId AS Utf8;
       DECLARE $stubId AS Utf8;
+      DECLARE $connectionId AS Utf8;
+      DECLARE $wsUrl AS Utf8;
 
-      INSERT INTO connections (connectionId, stubId, createdAt)
-      VALUES ($connectionId, $stubId, CurrentUtcTimestamp());
+      UPSERT INTO connections (stubId, connectionId, wsUrl, createdAt)
+      VALUES ($stubId, $connectionId, $wsUrl, CurrentUtcTimestamp());
     `;
     const result = await this.withSession(async session => {
       const preparedQuery = await session.prepareQuery(query);
       const params = {
-        '$connectionId': TypedValues.utf8(connectionId),
         '$stubId': TypedValues.utf8(stubId),
+        '$connectionId': TypedValues.utf8(connectionId),
+        '$wsUrl': TypedValues.utf8(wsUrl),
       };
       return session.executeQuery(preparedQuery, params);
     });
-    console.log(result);
-  }
-
-  async getConnections() {
-    const query = `
-      SELECT connectionId, stubId, createdAt FROM connections;
-    `;
-    const resultSets = await this.withSession(async session => {
-      const { resultSets } = await session.executeQuery(query);
-      return resultSets;
-    });
-    const rows = TypedData.createNativeObjects(resultSets[0]) as unknown as Connection[];
-    return rows;
+    logger.debug('Connection saved', result);
   }
 
   protected async withSession<T>(callback: (session: Session) => Promise<T>) {
@@ -87,9 +79,3 @@ export class Ydb {
     return ydbDriver;
   }
 }
-
-export async function ensureTable() {
-  // todo: create table dynamically by http route
-}
-
-

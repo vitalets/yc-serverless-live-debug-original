@@ -8,7 +8,7 @@ variable "sa_id" {
   type        = string
 }
 
-variable "bridge_ws_url" {
-  description = "Bridge WebSocket url"
-  type        = string
-}
+# variable "bridge_ws_url" {
+#   description = "Bridge WebSocket url"
+#   type        = string
+# }

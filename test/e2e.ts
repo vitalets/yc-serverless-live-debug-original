@@ -2,9 +2,8 @@
  * End-to-end test of live debug.
  */
 
-import assert from 'node:assert/strict';
-import timers from 'node:timers/promises';
 import 'dotenv/config';
+import assert from 'node:assert/strict';
 import fetch from 'node-fetch';
 import { Handler } from '@yandex-cloud/function-types';
 import { LocalClient } from '../src/client';
@@ -27,7 +26,7 @@ async function test() {
 
 async function runClient() {
   const client = new LocalClient({
-    bridgeWsUrl: process.env.BRIDGE_WS_URL || '',
+    wsUrl: process.env.WS_URL || '',
     stubId: process.env.STUB_ID || '',
     handler: <Handler.Http>(async event => {
       const body = event.isBase64Encoded
@@ -40,9 +39,7 @@ async function runClient() {
     })
   });
 
-  client.run();
-  // todo: use 'ready' event
-  await timers.setTimeout(5000);
+  await client.run();
   return client;
 }
 
@@ -89,3 +86,30 @@ CONN_ID=d202lri35t3sn3q66oj5u4k8bidif62bb; curl -X POST -H "Authorization: Beare
 }
 
 */
+
+
+/*
+  /ws:
+    x-yc-apigateway-websocket-connect:
+      parameters:
+      - name: X-Yc-Apigateway-Websocket-Connection-Id
+        in: header
+        description: Websocket connection identifier
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Connection identifier
+          content:
+            text/plain:
+              schema:
+                type: string
+      x-yc-apigateway-integration:
+        type: dummy
+        http_code: 200
+        http_headers:
+          X-Yc-Apigateway-Websocket-Connection-Id: '{X-Yc-Apigateway-Websocket-Connection-Id}'
+        content:
+          text/plain: ''
+          */

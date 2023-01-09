@@ -1,6 +1,7 @@
 /**
  * Protocol messages.
  */
+import { Handler } from '@yandex-cloud/function-types';
 export type Message = StubRequest | ClientRegister | ClientResponse | AckMessage;
 
 export type StubId = string;
@@ -15,18 +16,19 @@ interface BaseMessage {
 
 export interface StubRequest extends BaseMessage {
   type: 'stub.request',
-  replyTo: ConnetionId,
+  stubConnectionId: string,
   token: string,
   payload: Payload,
 }
 
 export interface ClientRegister extends BaseMessage {
   type: 'client.register',
+  wsUrl: string,
 }
 
 export interface ClientResponse extends BaseMessage {
   type: 'client.response',
-  payload: Payload,
+  payload: ReturnType<Handler.Http>,
 }
 
 export interface AckMessage extends BaseMessage {
