@@ -15,7 +15,7 @@ let wsClient: WsClient;
 export const handler: Handler.Http = async (event, context) => {
   const req = new CloudRequest(event, context);
   return handleClientRegister(req) || handleHttpRequest(req);
-}
+};
 
 function handleClientRegister(req: CloudRequest) {
   if (req.isWebSocketRequest() && req.wsEventType === 'MESSAGE') {
@@ -88,7 +88,7 @@ async function sendToLocalClient(clientConnectionId: string, req: CloudRequest) 
     await sendToConnection(clientConnectionId, message, req.token);
   } catch (e) {
     if (e instanceof ApigwError && e.code === 5) {
-      throw new Error(`No clients connected.`)
+      throw new Error(`No clients connected.`);
     } else {
       throw e;
     }

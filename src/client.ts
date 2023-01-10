@@ -11,7 +11,7 @@ import { sendToConnection } from './helpers/ws-apigw';
 export type LocalClientOptions = {
   wsUrl: string,
   stubId: string,
-  handler: Function,
+  handler: Function, // eslint-disable-line @typescript-eslint/ban-types
 }
 
 export class LocalClient {
