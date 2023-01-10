@@ -6,7 +6,7 @@ import { WsClient } from './helpers/ws-client';
 import { logger } from './helpers/logger';
 import { Handler } from '@yandex-cloud/function-types';
 import { Ydb } from './helpers/ydb';
-import { sendToConnection } from './helpers/ws-apigw';
+import { ApigwError, sendToConnection } from './helpers/ws-apigw';
 import { CloudRequest } from './helpers/cloud-request';
 
 // reuse ws client between calls
@@ -84,7 +84,15 @@ async function sendToLocalClient(clientConnectionId: string, req: CloudRequest) 
       context: req.context,
     },
   };
-  await sendToConnection(clientConnectionId, message, req.token);
+  try {
+    await sendToConnection(clientConnectionId, message, req.token);
+  } catch (e) {
+    if (e instanceof ApigwError && e.code === 5) {
+      throw new Error(`No clients connected.`)
+    } else {
+      throw e;
+    }
+  }
   return message;
 }
 

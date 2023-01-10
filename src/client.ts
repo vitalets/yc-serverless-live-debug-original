@@ -27,8 +27,8 @@ export class LocalClient {
     this.waitRequests();
   }
 
-  close() {
-    this.wsClient.ws.close();
+  async close() {
+    await this.wsClient.close();
   }
 
   protected async ensureConnected() {

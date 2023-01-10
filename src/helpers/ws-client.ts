@@ -2,6 +2,7 @@
  * WebSocket client wrapper.
  */
 import http from 'node:http';
+import { once } from 'node:events';
 import WebSocket from 'ws';
 import { Message } from './protocol';
 import { logger } from './logger';
@@ -55,6 +56,13 @@ export class WsClient {
     });
   }
 
+  async close() {
+    if (this.ws.readyState === WebSocket.OPEN) {
+      this.ws.close();
+      await once(this.ws, 'close');
+    }
+  }
+
   protected onMessage(message: WebSocket.RawData) {
     logger.debug(`WS <-: ${message}`);
     const jsonMessage = JSON.parse(message.toString()) as Message;
@@ -74,7 +82,7 @@ export class WsClient {
   }
 
   protected onClose(code: number, reason: Buffer) {
-    logger.info(`WS connection closed`);
+    logger.info(`WS connection closed: ${code} ${reason}`);
     // todo: remove listeners
   }
 }

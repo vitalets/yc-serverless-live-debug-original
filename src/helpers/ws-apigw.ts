@@ -22,6 +22,15 @@ export async function sendToConnection(connectionId: string, message: Message, t
     data: Buffer.from(messageStr, 'utf8').toString('base64'),
   });
   const res = await fetch(url, { method, headers, body });
-  if (!res.ok) throw new Error(`${res.status} ${res.statusText} ${await res.text()}`);
+  if (!res.ok) {
+    const { message, code } = await res.json();
+    throw new ApigwError(message, code);
+  }
   logger.info(`WS message sent to connection: ${connectionId}`);
+}
+
+export class ApigwError extends Error {
+  constructor(message: string, public code: number) {
+    super(message);
+  }
 }
