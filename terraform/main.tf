@@ -6,10 +6,6 @@ terraform {
   }
 }
 
-resource "yandex_resourcemanager_folder" "live_debug" {
-  name = "live-debug"
-}
-
 output "stub_url" {
   value = "https://${yandex_api_gateway.stub.domain}"
 }

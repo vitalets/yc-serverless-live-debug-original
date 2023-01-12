@@ -1,31 +1,72 @@
 # yc-serverless-live-debug
-Live debugging of Yandex cloud functions with Node.js.
+Live debugging of Yandex cloud functions with local code on Node.js.
 
 ## How it works
-Client connects to server via WebSocket API.
-Then it can subscribe to one or several *topics*.
-Another client can send message to the particular topic and all subscribed clients will receive that message instantly.
+There are 2 main components:
+- **stub**: cloud function that proxies requests to local client via WebSocket API
+- **local client**: WebSocket client that receives requests from stub, runs local code and returns response to stub
 
-Inspired by SST (add link)
+The process is following:
+1. Local client connects to WebSocket API gateway (connection id is stored in YDB)
+2. Stub receives HTTP request and checks is there connected local client
+3. If local client exists stub re-sends request as WebSocket message
+4. At the same time stub creates own WebSocket connection and waits response from local client. This trick allows to get response in the same instance of stub and respond to original request
 
-## Used components
-* [API Gateway with WebSocket integration]()
-* [Cloud function]()
-* [Yandex Database]()
+The schema was inspired by [SST Live Lambda Dev](https://docs.sst.dev/live-lambda-development). But the implementation differs from SST as we use only 1 cloud function instead of 2.
 
 ## Deploy
+To use live debug your need to deploy required components to your Yandex cloud account.
+By default all components are deployed to separate cloud folder `live-debug`.
 To deploy service you need [Yandex CLI]() and [Terraform]().
-By default all components are deployed to separate folder `live-debug`.
 
-```
-npm run deploy
-```
+1. Clone the repo
+   ```
+   git clone ...
+   cd yc-serverless-live-debug
+   ```
+2. Install dependencies
+   ```
+   npm ci
+   ```
+3. Run deploy commnd
+   ```
+   npm run deploy
+   ```
+4. Create `.env` file with the following values from deploy output:
+   ```
+   WS_URL=
+   STUB_ID=
+   STUB_URL=
+   ```
+5. Run tests to ensure everything works:
+   ```
+   npm t
+   ```
 
 ## Usage
+To debug function locally in some project you need to import client from `yc-serverless-live-debug` directory and run it with your handler:
 
+For example, 
+```ts
+// debug.ts
+import { LocalClient } from 'path/to/yc-serverless-live-debug/dist/client';
+import { handler } from 'path/to/your/handler';
 
-## Protocol
+(async () => {
+  const client = new LocalClient({
+    wsUrl: process.env.WS_URL || '',
+    stubId: process.env.STUB_ID || '',
+    handler,
+  });
+
+  await client.run();
+})();
 ```
+
+Start debugging:
+```
+ts-node debug.ts
 ```
 
-## Development
+
+

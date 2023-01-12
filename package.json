@@ -3,7 +3,7 @@
   "description": "Live debug of Yandex cloud functions",
   "version": "1.0.0",
   "scripts": {
-    "prepare": "git config core.hooksPath ./scripts/.hooks",
+    "init": "git config core.hooksPath ./scripts/.hooks",
     "lint": "eslint src test --ext .ts",
     "test": "LOG_LEVEL=error mocha -r ts-node/register test/*.spec.ts -t 10000",
     "test:debug": "LOG_LEVEL=debug ts-node test/e2e.ts",

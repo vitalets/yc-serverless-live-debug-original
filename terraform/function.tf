@@ -19,9 +19,10 @@ resource "yandex_function" "stub" {
   content {
     zip_filename = data.archive_file.zip.output_path
   }
-  service_account_id = yandex_iam_service_account.live_debug.id
-  folder_id = yandex_resourcemanager_folder.live_debug.id
+  service_account_id = local.sa_id
+  folder_id = local.folder_id
   environment = {
     YDB_PATH = yandex_ydb_database_serverless.live_debug.database_path
+    # Can't set here WS_URL from yandex_api_gateway as it leads to circullar dependency
   }
 }
