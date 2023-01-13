@@ -38,7 +38,9 @@ To deploy service you need [Yandex CLI]() and [Terraform]().
    STUB_ID=
    STUB_URL=
    ```
-5. Run tests to ensure everything works:
+5. Open YDB [web console](https://console.cloud.yandex.ru) and create table from [terraform/ydb.sql](/terraform/ydb.sql)
+
+6. Run tests to ensure everything works:
    ```
    npm t
    ```
@@ -46,27 +48,35 @@ To deploy service you need [Yandex CLI]() and [Terraform]().
 ## Usage
 To debug function locally in some project you need to import client from `yc-serverless-live-debug` directory and run it with your handler:
 
-For example, 
 ```ts
-// debug.ts
 import { LocalClient } from 'path/to/yc-serverless-live-debug/dist/client';
 import { handler } from 'path/to/your/handler';
 
+const { WS_URL = '', STUB_ID = '' } = process.env;
+
 (async () => {
   const client = new LocalClient({
-    wsUrl: process.env.WS_URL || '',
-    stubId: process.env.STUB_ID || '',
+    wsUrl: WS_URL,
+    stubId: STUB_ID,
     handler,
   });
 
   await client.run();
 })();
 ```
-
+Exmaple of `handler.ts`:
+```ts
+export const handler = async event => {
+  return {
+    statusCode: 200,
+    body: `Got request: ${event.body}`
+  };
+}
+```
 Start debugging:
 ```
 ts-node debug.ts
 ```
 
-
+See [example](/example) for more details.
 

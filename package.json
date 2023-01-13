@@ -7,6 +7,7 @@
     "lint": "eslint src test --ext .ts",
     "test": "LOG_LEVEL=error mocha -r ts-node/register test/*.spec.ts -t 10000",
     "test:debug": "LOG_LEVEL=debug ts-node test/e2e.ts",
+    "example": "ts-node example/debug",
     "build": "./scripts/build.sh",
     "deploy": "./scripts/deploy.sh"
   },
