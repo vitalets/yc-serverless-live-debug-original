@@ -1,6 +1,14 @@
 # yc-serverless-live-debug
 Live debug of Yandex cloud functions with local code on Node.js.
 
+<!-- toc -->
+
+- [How it works](#how-it-works)
+- [Deploy](#deploy)
+- [Usage](#usage)
+
+<!-- tocstop -->
+
 ## How it works
 ![live-debug](https://user-images.githubusercontent.com/1473072/212291689-e5b0f31a-9abd-4e9b-9a79-57f574831f3c.png)
 
