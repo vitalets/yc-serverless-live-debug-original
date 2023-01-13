@@ -5,9 +5,9 @@ Live debug of Yandex cloud functions with local code on Node.js.
 ![live-debug](https://user-images.githubusercontent.com/1473072/212291689-e5b0f31a-9abd-4e9b-9a79-57f574831f3c.png)
 
 There are 3 main components:
-- **API gateway**: route HTTP requests to Stub function and hold WebSocket connections
-- **Stub function**: cloud function that proxy HTTP requests to local client via WebSocket API
-- **Local client**: WebSocket client on localhost that receive requests from stub, execute local code and return response to stub
+- **API gateway**: routes HTTP requests to Stub function and holds WebSocket connections
+- **Stub function**: cloud function that proxies HTTP requests to local client via WebSocket API
+- **Local client**: WebSocket client on localhost that receives requests from stub, executes local code and returns response to stub
 
 The process is following:
 1. Local client connects to WebSocket API gateway (connection id is stored in YDB)
