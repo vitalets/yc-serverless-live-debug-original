@@ -1,5 +1,5 @@
 # yc-serverless-live-debug
-Live debugging of Yandex cloud functions with local code on Node.js.
+Live debug of Yandex cloud functions with local code on Node.js.
 
 ## How it works
 There are 2 main components:
