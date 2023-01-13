@@ -2,7 +2,7 @@ import 'dotenv/config';
 import { LocalClient } from '../dist/client';
 import { handler } from './handler';
 
-const { WS_URL = '', STUB_ID = '' } = process.env;
+const { WS_URL = '', STUB_ID = '', STUB_URL } = process.env;
 
 (async () => {
   const client = new LocalClient({
@@ -12,4 +12,5 @@ const { WS_URL = '', STUB_ID = '' } = process.env;
   });
 
   await client.run();
+  console.log(`Waiting requests to: ${STUB_URL}`);
 })();
