@@ -15,4 +15,5 @@ npm-debug.log
 
 # my
 terraform/dist.zip
-/dist
+# Dont ignore /dist because client can be consumed directly from repo instead of npm
+#/dist
