@@ -20,7 +20,7 @@ The process is following:
 ## Deploy
 To use live debug your need to deploy required components to your Yandex cloud account.
 By default all components are deployed to separate cloud folder `live-debug`.
-To deploy service you need [Yandex CLI]() and [Terraform]().
+To deploy service you need [Yandex CLI](https://cloud.yandex.ru/docs/cli/) and [Terraform](https://cloud.yandex.ru/docs/tutorials/infrastructure-management/terraform-quickstart).
 
 1. Clone the repo
    ```
