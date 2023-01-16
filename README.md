@@ -10,20 +10,17 @@ Live debug of Yandex cloud functions with local code on Node.js.
 <!-- tocstop -->
 
 ## How it works
-![live-debug](https://user-images.githubusercontent.com/1473072/212291689-e5b0f31a-9abd-4e9b-9a79-57f574831f3c.png)
-
-There are 3 main components:
-- **API gateway**: routes HTTP requests to Stub function and holds WebSocket connections
-- **Stub function**: cloud function that proxies HTTP requests to local client via WebSocket API
-- **Local client**: WebSocket client on localhost that receives requests from stub, executes local code and returns response to stub
+![live-debug](https://user-images.githubusercontent.com/1473072/212637441-9b0fa831-a67c-4300-892f-797bdc2982a7.png)
 
 The process is following:
-1. Local client connects to WebSocket API gateway (connection id is stored in YDB)
-2. Stub receives HTTP request and checks in YDB is there connection from local client
-3. If local client exists stub re-sends request to it as WebSocket message. Also stub creates own WebSocket connection to allow local client to send a response to exactly this instance of stub
-4. Local client receives HTTP request as WebSocket message, runs code locally and send response back as WebSocket message
+1. Stub cloud function receives HTTP request via Stub API gateway
+2. Stub checks in YDB is there connected WS clients (from localhost)
+3. If local client exists stub proxies request as WebSocket message
+4. Also stub creates own WebSocket connection to allow local client to respond exactly to this instance of stub
+5. Local client receives WebSocket message, handles request locally and sends response back to stub
+6. Stub waits response from client and returns it as a result to incoming HTTP request
 
-> The schema was inspired by [SST Live Lambda Dev](https://docs.sst.dev/live-lambda-development). Actual implementation differs from SST as we use only 1 cloud function instead of 2.
+> The schema was inspired by [SST Live Lambda Dev](https://docs.sst.dev/live-lambda-development) with some optimizations.
 
 ## Deploy
 To use live debug your need to deploy required components to your Yandex cloud account.
@@ -45,7 +42,7 @@ To deploy service you need [Yandex CLI](https://cloud.yandex.ru/docs/cli/) and [
    ```
 4. Create `.env` file with the following values from deploy output:
    ```
-   WS_URL=
+   CLIENT_WS_URL=
    STUB_ID=
    STUB_URL=
    ```
@@ -55,6 +52,10 @@ To deploy service you need [Yandex CLI](https://cloud.yandex.ru/docs/cli/) and [
    ```
    npm t
    ```
+7. Run example and click provided url:
+   ```
+   npm run example
+   ```
 
 ## Usage
 To debug function locally in some project you need to import client from `yc-serverless-live-debug` directory and run it with your handler:
@@ -63,11 +64,11 @@ To debug function locally in some project you need to import client from `yc-ser
 import { LocalClient } from 'path/to/yc-serverless-live-debug/dist/client';
 import { handler } from 'path/to/your/handler';
 
-const { WS_URL = '', STUB_ID = '' } = process.env;
+const { CLIENT_WS_URL = '', STUB_ID = '' } = process.env;
 
 (async () => {
   const client = new LocalClient({
-    wsUrl: WS_URL,
+    wsUrl: CLIENT_WS_URL,
     stubId: STUB_ID,
     handler,
   });
