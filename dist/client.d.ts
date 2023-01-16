@@ -1,8 +1,8 @@
 /**
- * Local client that receives WebSocket message, runs local code
+ * Local WebSocket client that receives request, runs local code
  * and sends result back to stub function.
  */
-import { ClientResponse, StubRequest } from './helpers/protocol';
+import { WsRequest, WsResponse } from './helpers/protocol';
 import { WsClient } from './helpers/ws-client';
 export type LocalClientOptions = {
     wsUrl: string;
@@ -16,12 +16,11 @@ export declare class LocalClient {
     run(): Promise<void>;
     close(): Promise<void>;
     protected ensureConnected(): Promise<void>;
-    protected register(): Promise<void>;
     protected waitRequests(): void;
-    protected getResponsePayload(request: StubRequest): Promise<import("@yandex-cloud/function-types/dist/src/http").Http.Result | {
+    protected getResponsePayload(request: WsRequest): Promise<import("@yandex-cloud/function-types/dist/src/http").Http.Result | {
         statusCode: number;
         body: any;
     }>;
-    protected sendResponse(message: StubRequest, payload: ClientResponse['payload']): Promise<void>;
+    protected sendResponse(message: WsRequest, payload: WsResponse['payload']): Promise<void>;
 }
 //# sourceMappingURL=client.d.ts.map

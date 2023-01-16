@@ -6,18 +6,6 @@ terraform {
   }
 }
 
-output "stub_url" {
-  value = "https://${yandex_api_gateway.stub.domain}"
-}
-
-output "ws_url" {
-  value = "wss://${yandex_api_gateway.stub.domain}/ws"
-}
-
-output "stub_id" {
-  value = yandex_function.stub.id
-}
-
 
 # module "bridge" {
 #   source = "./bridge"

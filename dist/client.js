@@ -1,6 +1,6 @@
 "use strict";
 /**
- * Local client that receives WebSocket message, runs local code
+ * Local WebSocket client that receives request, runs local code
  * and sends result back to stub function.
  */
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -11,11 +11,12 @@ const ws_apigw_1 = require("./helpers/ws-apigw");
 class LocalClient {
     constructor(options) {
         this.options = options;
-        this.wsClient = new ws_client_1.WsClient(options.wsUrl);
+        this.wsClient = new ws_client_1.WsClient(options.wsUrl, {
+            'X-Stub-Id': options.stubId,
+        });
     }
     async run() {
         await this.wsClient.ensureConnected();
-        await this.register();
         this.waitRequests();
     }
     async close() {
@@ -25,22 +26,22 @@ class LocalClient {
         await this.wsClient.ensureConnected();
         logger_1.logger.info('Local client connected');
     }
-    async register() {
-        logger_1.logger.info('Registering local client...');
-        const message = {
-            type: 'client.register',
-            wsUrl: this.wsClient.ws.url,
-            stubId: this.options.stubId,
-            reqId: Date.now().toString(),
-        };
-        this.wsClient.sendJson(message);
-        await this.wsClient.waitMessage(m => m.reqId === message.reqId);
-        logger_1.logger.info('Local client registered');
-    }
+    // protected async register() {
+    //   logger.info('Registering local client...');
+    //   const message: ClientRegister = {
+    //     type: 'client.register',
+    //     wsUrl: this.wsClient.ws.url,
+    //     stubId: this.options.stubId,
+    //     reqId: Date.now().toString(),
+    //   };
+    //   this.wsClient.sendJson(message);
+    //   await this.wsClient.waitMessage(m => m.reqId === message.reqId);
+    //   logger.info('Local client registered');
+    // }
     waitRequests() {
         logger_1.logger.info(`Waiting requests from stub...`);
         this.wsClient.onJsonMessage = async (message) => {
-            if (message.type !== 'stub.request')
+            if (message.type !== 'request')
                 return;
             logger_1.logger.info(`Got request from stub: ${message.reqId}`);
             const responsePayload = await this.getResponsePayload(message);
@@ -65,7 +66,7 @@ class LocalClient {
     }
     async sendResponse(message, payload) {
         const response = {
-            type: 'client.response',
+            type: 'response',
             stubId: message.stubId,
             reqId: message.reqId,
             payload,

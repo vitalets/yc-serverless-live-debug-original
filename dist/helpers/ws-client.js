@@ -8,8 +8,9 @@ const node_events_1 = require("node:events");
 const ws_1 = __importDefault(require("ws"));
 const logger_1 = require("./logger");
 class WsClient {
-    constructor(wsUrl) {
+    constructor(wsUrl, headers = {}) {
         this.wsUrl = wsUrl;
+        this.headers = headers;
         this.connectionId = '';
         this.waitFns = new Map();
     }
@@ -19,7 +20,7 @@ class WsClient {
             return;
         }
         await new Promise(resolve => {
-            this.ws = new ws_1.default(this.wsUrl);
+            this.ws = new ws_1.default(this.wsUrl, { headers: this.headers });
             this.ws.on('open', resolve);
             this.ws.on('upgrade', req => this.onUpgrade(req));
             this.ws.on('message', message => this.onMessage(message));
@@ -52,15 +53,9 @@ class WsClient {
     onMessage(message) {
         logger_1.logger.debug(`WS <-: ${message}`);
         const jsonMessage = JSON.parse(message.toString());
-        this.waitFns.forEach(({ resolve, reject }, fn) => {
-            if (!fn(jsonMessage))
-                return;
-            if (jsonMessage.type === 'ack' && jsonMessage.error) {
-                reject(new Error(jsonMessage.error.message));
-            }
-            else {
+        this.waitFns.forEach(({ resolve }, fn) => {
+            if (fn(jsonMessage))
                 resolve(jsonMessage);
-            }
         });
         this.onJsonMessage?.(jsonMessage);
     }

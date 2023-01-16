@@ -5,23 +5,24 @@
  */
 import http from 'node:http';
 import WebSocket from 'ws';
-import { Message } from './protocol';
-type WaitFn = (message: Message) => unknown;
+import { WsMessage } from './protocol';
+type WaitFn = (message: WsMessage) => unknown;
 type WaitFnData = {
-    resolve: (v: Message) => unknown;
+    resolve: (v: WsMessage) => unknown;
     reject: (e: Error) => unknown;
 };
 export declare class WsClient {
     protected wsUrl: string;
+    protected headers: Record<string, string>;
     ws: WebSocket;
     connectionId: string;
-    onJsonMessage?: (message: Message) => unknown;
+    onJsonMessage?: (message: WsMessage) => unknown;
     protected waitFns: Map<WaitFn, WaitFnData>;
-    constructor(wsUrl: string);
+    constructor(wsUrl: string, headers?: Record<string, string>);
     ensureConnected(): Promise<void>;
-    sendJson(message: Message): Promise<void>;
+    sendJson(message: WsMessage): Promise<void>;
     clearListeners(): void;
-    waitMessage(fn: WaitFn): Promise<Message>;
+    waitMessage(fn: WaitFn): Promise<WsMessage>;
     close(): Promise<void>;
     protected onMessage(message: WebSocket.RawData): void;
     protected onUpgrade(req: http.IncomingMessage): void;

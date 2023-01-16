@@ -11,7 +11,6 @@ let ydbDriver: Driver;
 type Connection = {
   stubId: string,
   connectionId: string,
-  wsUrl: string,
   createdAt: string,
 };
 
@@ -22,7 +21,7 @@ export class Ydb {
     const query = `
       DECLARE $stubId AS Utf8;
 
-      SELECT connectionId, wsUrl, createdAt
+      SELECT connectionId, createdAt
       FROM connections WHERE stubId = $stubId
       ORDER BY createdAt DESC
       LIMIT 1
@@ -39,21 +38,19 @@ export class Ydb {
     return rows.length ? rows[0] : undefined;
   }
 
-  async saveConnection(stubId: string, connectionId: string, wsUrl: string) {
+  async saveConnection(stubId: string, connectionId: string) {
     const query = `
       DECLARE $stubId AS Utf8;
       DECLARE $connectionId AS Utf8;
-      DECLARE $wsUrl AS Utf8;
 
-      UPSERT INTO connections (stubId, connectionId, wsUrl, createdAt)
-      VALUES ($stubId, $connectionId, $wsUrl, CurrentUtcTimestamp());
+      UPSERT INTO connections (stubId, connectionId, createdAt)
+      VALUES ($stubId, $connectionId, CurrentUtcTimestamp());
     `;
     const result = await this.withSession(async session => {
       const preparedQuery = await session.prepareQuery(query);
       const params = {
         '$stubId': TypedValues.utf8(stubId),
         '$connectionId': TypedValues.utf8(connectionId),
-        '$wsUrl': TypedValues.utf8(wsUrl),
       };
       return session.executeQuery(preparedQuery, params);
     });

@@ -48,20 +48,21 @@ export class CloudRequest {
     return Boolean(this.wsConnectionId);
   }
 
-  buildResponse(body?: unknown) {
+  buildSuccessResponse(body?: unknown) {
     const strBody = body === undefined
       ? undefined
       : (typeof body === 'object' ? JSON.stringify(body) : String(body));
+    // todo: content type
     return {
       statusCode: 200,
       body: strBody,
     };
   }
 
-  buildErrorResponse(e: Error) {
+  buildErrorResponse(e: Error, statusCode = 500) {
     const body = `${e.stack}\nEVENT: ${JSON.stringify(this.event)}`;
     return {
-      statusCode: 500,
+      statusCode,
       body,
     };
   }

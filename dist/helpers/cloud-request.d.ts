@@ -16,11 +16,11 @@ export declare class CloudRequest {
     get wsEventType(): any;
     get body(): string;
     isWebSocketRequest(): boolean;
-    buildResponse(body?: unknown): {
+    buildSuccessResponse(body?: unknown): {
         statusCode: number;
         body: string | undefined;
     };
-    buildErrorResponse(e: Error): {
+    buildErrorResponse(e: Error, statusCode?: number): {
         statusCode: number;
         body: string;
     };

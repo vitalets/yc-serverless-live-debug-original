@@ -1,7 +1,7 @@
 /**
- * Stub function accepts requests and proxies them to local code via WebSocket.
+ * Stub function proxies HTTP requests to local code via WebSocket.
  */
-import { AckMessage, ClientRegister, Message, StubRequest } from './helpers/protocol';
+import { WsRequest } from './helpers/protocol';
 import { WsClient } from './helpers/ws-client';
 import { logger } from './helpers/logger';
 import { Handler } from '@yandex-cloud/function-types';
@@ -9,27 +9,16 @@ import { Ydb } from './helpers/ydb';
 import { ApigwError, sendToConnection } from './helpers/ws-apigw';
 import { CloudRequest } from './helpers/cloud-request';
 
+const { STUB_WS_URL = '' } = process.env;
+
 // reuse ws client between calls
 let wsClient: WsClient;
 
 export const handler: Handler.Http = async (event, context) => {
   const req = new CloudRequest(event, context);
-  return handleClientRegister(req) || handleHttpRequest(req);
-};
-
-function handleClientRegister(req: CloudRequest) {
-  if (req.isWebSocketRequest() && req.wsEventType === 'MESSAGE') {
-    const message = JSON.parse(req.body) as Message;
-    if (message.type === 'client.register') {
-      return storeClientConnectionInfo(req, message);
-    }
-  }
-}
-
-async function handleHttpRequest(req: CloudRequest) {
+  const wsClient = getWsClient();
   try {
-    const { clientConnectionId, wsUrl } = await getClientConnection(req);
-    const wsClient = getWsClient(wsUrl);
+    const clientConnectionId = await getClientConnectionId(req);
     await wsClient.ensureConnected();
     await sendToLocalClient(clientConnectionId, req);
     const response = await waitResponse(wsClient, req.id);
@@ -40,41 +29,20 @@ async function handleHttpRequest(req: CloudRequest) {
   } finally {
     wsClient.clearListeners();
   }
-}
+};
 
-async function storeClientConnectionInfo(req: CloudRequest, msg: ClientRegister) {
-  logger.info('client register', JSON.stringify(msg));
-  const ackMessage: AckMessage = {
-    type: 'ack',
-    stubId: req.functionId,
-    reqId: msg.reqId,
-  };
-  try {
-    await new Ydb(req.token).saveConnection(req.functionId, req.wsConnectionId, msg.wsUrl);
-    return req.buildResponse(ackMessage);
-  } catch (e) {
-    logger.error(e);
-    ackMessage.error = {
-      code: 'error',
-      message: e.stack,
-    };
-    return req.buildResponse(ackMessage);
-  }
-}
-
-async function getClientConnection(req: CloudRequest) {
+async function getClientConnectionId(req: CloudRequest) {
   const connection = await new Ydb(req.token).getConnection(req.functionId);
   if (!connection) throw new Error(`No client connections`);
-  return {
-    clientConnectionId: connection.connectionId,
-    wsUrl: connection.wsUrl,
-  };
+  const { connectionId } =  connection;
+  logger.info(`Client connection found: ${connectionId}`);
+  return connectionId;
 }
 
 async function sendToLocalClient(clientConnectionId: string, req: CloudRequest) {
   logger.info(`Sending request to local client...`);
-  const message: StubRequest = {
-    type: 'stub.request',
+  const message: WsRequest = {
+    type: 'request',
     stubId: req.functionId,
     reqId: req.id,
     stubConnectionId: wsClient.connectionId,
@@ -100,11 +68,12 @@ async function waitResponse(wsClient: WsClient, reqId: string) {
   logger.info(`Waiting response...`);
   const message = await wsClient.waitMessage(m => m.reqId === reqId);
   logger.info(`Got response: ${JSON.stringify(message)}`);
-  if (message.type === 'client.response') return message;
+  if (message.type === 'response') return message;
   throw new Error(`Invalid response type: ${message.type}`);
 }
 
-function getWsClient(wsUrl: string) {
-  wsClient = wsClient || new WsClient(wsUrl);
+function getWsClient() {
+  wsClient = wsClient || new WsClient(STUB_WS_URL);
+  // todo: check disconnected
   return wsClient;
 }

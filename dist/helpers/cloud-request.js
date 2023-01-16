@@ -35,19 +35,20 @@ class CloudRequest {
     isWebSocketRequest() {
         return Boolean(this.wsConnectionId);
     }
-    buildResponse(body) {
+    buildSuccessResponse(body) {
         const strBody = body === undefined
             ? undefined
             : (typeof body === 'object' ? JSON.stringify(body) : String(body));
+        // todo: content type
         return {
             statusCode: 200,
             body: strBody,
         };
     }
-    buildErrorResponse(e) {
+    buildErrorResponse(e, statusCode = 500) {
         const body = `${e.stack}\nEVENT: ${JSON.stringify(this.event)}`;
         return {
-            statusCode: 500,
+            statusCode,
             body,
         };
     }

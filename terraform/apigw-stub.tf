@@ -1,13 +1,13 @@
 locals {
-  apigw_name = "live-debug-stub"
+  stub_apigw_name = "apigw-stub"
 }
 
 resource "yandex_api_gateway" "stub" {
-  name = local.apigw_name
+  name = local.stub_apigw_name
   description = "API gateway to call stub function"
   folder_id = local.folder_id
-  spec = templatefile("${path.module}/apigw.yaml", {
-    apigw_name = local.apigw_name
+  spec = templatefile("${path.module}/apigw-stub.yaml", {
+    apigw_name = local.stub_apigw_name
     stub_fn_id = yandex_function.stub.id
     sa_id = local.sa_id
   })

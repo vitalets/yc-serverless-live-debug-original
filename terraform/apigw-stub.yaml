@@ -4,13 +4,6 @@ info:
   version: 1.0.0
 
 paths:
-  /ws:
-    x-yc-apigateway-websocket-message:
-      x-yc-apigateway-integration:
-        type: cloud_functions
-        function_id: ${stub_fn_id}
-        tag: $latest
-        service_account_id: ${sa_id}
   /{path+}:
     x-yc-apigateway-any-method:
       parameters:

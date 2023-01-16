@@ -2,39 +2,25 @@
  * Protocol messages.
  */
 import { Handler } from '@yandex-cloud/function-types';
-export type Message = StubRequest | ClientRegister | ClientResponse | AckMessage;
 
-export type StubId = string;
-export type ReqId = string;
-export type Payload = Record<string, unknown>;
-export type ConnetionId = string;
+export type WsMessage = WsRequest | WsResponse;
 
 interface BaseMessage {
-  stubId: StubId,
-  reqId: ReqId,
+  stubId: string,
+  reqId: string,
 }
 
-export interface StubRequest extends BaseMessage {
-  type: 'stub.request',
+export interface WsRequest extends BaseMessage {
+  type: 'request',
   stubConnectionId: string,
   token: string,
-  payload: Payload,
+  payload: {
+    event: Parameters<Handler.Http>[0],
+    context: Parameters<Handler.Http>[1],
+  },
 }
 
-export interface ClientRegister extends BaseMessage {
-  type: 'client.register',
-  wsUrl: string,
-}
-
-export interface ClientResponse extends BaseMessage {
-  type: 'client.response',
+export interface WsResponse extends BaseMessage {
+  type: 'response',
   payload: ReturnType<Handler.Http>,
-}
-
-export interface AckMessage extends BaseMessage {
-  type: 'ack',
-  error?: {
-    code: string,
-    message: string,
-  }
 }
