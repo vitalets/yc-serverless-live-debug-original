@@ -10,7 +10,7 @@ Live debug of Yandex cloud functions with local code on Node.js.
 <!-- tocstop -->
 
 ## How it works
-![live-debug](https://user-images.githubusercontent.com/1473072/212637441-9b0fa831-a67c-4300-892f-797bdc2982a7.png)
+![live-debug](https://user-images.githubusercontent.com/1473072/212640296-5047ddc9-2f5b-4366-9ee0-bb32e18f06e1.png)
 
 The process is following:
 1. Stub cloud function receives HTTP request via Stub API gateway
