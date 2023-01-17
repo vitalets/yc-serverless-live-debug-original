@@ -22,9 +22,8 @@ export class Ydb {
       DECLARE $stubId AS Utf8;
 
       SELECT connectionId, createdAt
-      FROM connections WHERE stubId = $stubId
-      ORDER BY createdAt DESC
-      LIMIT 1
+      FROM connections
+      WHERE stubId = $stubId
     `;
     const resultSets = await this.withSession(async session => {
       const preparedQuery = await session.prepareQuery(query);
