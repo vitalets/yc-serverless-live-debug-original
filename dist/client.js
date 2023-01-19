@@ -26,18 +26,6 @@ class LocalClient {
         await this.wsClient.ensureConnected();
         logger_1.logger.info('Local client connected');
     }
-    // protected async register() {
-    //   logger.info('Registering local client...');
-    //   const message: ClientRegister = {
-    //     type: 'client.register',
-    //     wsUrl: this.wsClient.ws.url,
-    //     stubId: this.options.stubId,
-    //     reqId: Date.now().toString(),
-    //   };
-    //   this.wsClient.sendJson(message);
-    //   await this.wsClient.waitMessage(m => m.reqId === message.reqId);
-    //   logger.info('Local client registered');
-    // }
     waitRequests() {
         logger_1.logger.info(`Waiting requests from stub...`);
         this.wsClient.onJsonMessage = async (message) => {
@@ -67,7 +55,6 @@ class LocalClient {
     async sendResponse(message, payload) {
         const response = {
             type: 'response',
-            stubId: message.stubId,
             reqId: message.reqId,
             payload,
         };

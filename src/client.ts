@@ -10,6 +10,7 @@ import { sendToConnection } from './helpers/ws-apigw';
 
 export type LocalClientOptions = {
   wsUrl: string,
+  /** Unique id of stub function. Allows to route multiple stubs/clients via single ydb */
   stubId: string,
   handler: Function, // eslint-disable-line @typescript-eslint/ban-types
 }
@@ -36,19 +37,6 @@ export class LocalClient {
     await this.wsClient.ensureConnected();
     logger.info('Local client connected');
   }
-
-  // protected async register() {
-  //   logger.info('Registering local client...');
-  //   const message: ClientRegister = {
-  //     type: 'client.register',
-  //     wsUrl: this.wsClient.ws.url,
-  //     stubId: this.options.stubId,
-  //     reqId: Date.now().toString(),
-  //   };
-  //   this.wsClient.sendJson(message);
-  //   await this.wsClient.waitMessage(m => m.reqId === message.reqId);
-  //   logger.info('Local client registered');
-  // }
 
   protected waitRequests() {
     logger.info(`Waiting requests from stub...`);
@@ -79,7 +67,6 @@ export class LocalClient {
   protected async sendResponse(message: WsRequest, payload: WsResponse['payload']) {
     const response: WsResponse = {
       type: 'response',
-      stubId: message.stubId,
       reqId: message.reqId,
       payload,
     };

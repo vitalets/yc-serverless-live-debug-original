@@ -3,12 +3,10 @@
  */
 import { Handler } from '@yandex-cloud/function-types';
 export type WsMessage = WsRequest | WsResponse;
-interface BaseMessage {
-    stubId: string;
-    reqId: string;
-}
-export interface WsRequest extends BaseMessage {
+export interface WsRequest {
     type: 'request';
+    reqId: string;
+    stubId: string;
     stubConnectionId: string;
     token: string;
     payload: {
@@ -16,9 +14,9 @@ export interface WsRequest extends BaseMessage {
         context: Parameters<Handler.Http>[1];
     };
 }
-export interface WsResponse extends BaseMessage {
+export interface WsResponse {
     type: 'response';
+    reqId: string;
     payload: ReturnType<Handler.Http>;
 }
-export {};
 //# sourceMappingURL=protocol.d.ts.map

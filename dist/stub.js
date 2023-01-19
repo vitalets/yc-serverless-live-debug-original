@@ -11,9 +11,9 @@ const { STUB_WS_URL = '' } = process.env;
 let wsClient;
 const handler = async (event, context) => {
     const req = new cloud_request_1.CloudRequest(event, context);
+    const wsClient = getWsClient();
     try {
         const clientConnectionId = await getClientConnectionId(req);
-        const wsClient = getWsClient();
         await wsClient.ensureConnected();
         await sendToLocalClient(clientConnectionId, req);
         const response = await waitResponse(wsClient, req.id);

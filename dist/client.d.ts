@@ -6,6 +6,7 @@ import { WsRequest, WsResponse } from './helpers/protocol';
 import { WsClient } from './helpers/ws-client';
 export type LocalClientOptions = {
     wsUrl: string;
+    /** Unique id of stub function. Allows to route multiple stubs/clients via single ydb */
     stubId: string;
     handler: Function;
 };
