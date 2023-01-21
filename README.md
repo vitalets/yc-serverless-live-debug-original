@@ -56,20 +56,35 @@ To deploy service you need [Yandex CLI](https://cloud.yandex.ru/docs/cli/) and [
    ```
    npm run example
    ```
+   Output:
+   ```
+   WS connection opened
+   Waiting requests from stub...
+   Click this url to send request: https://**********.apigw.yandexcloud.net
+   Got request from stub: 58ea5f4c-bc04-4275-b62e-dce809591926
+   Waiting response from local code...
+   Got response from local code
+   WS sending message to connection: d20438soh73hn36us5kcd25irkmg6611n
+   WS message sent to connection: d20438soh73hn36us5kcd25irkmg6611n
+   Response sent
+   ```
 
 ## Usage
-To debug function locally in some project you need to import client from `yc-serverless-live-debug` directory and run it with your handler:
+To debug cloud function locally create `debug.ts` like follows:
 
 ```ts
+/** local client that connects to WebSocket */
 import { LocalClient } from 'path/to/yc-serverless-live-debug/dist/client';
+/** your code to handle requests */
 import { handler } from 'path/to/your/handler';
-
-const { CLIENT_WS_URL = '', STUB_ID = '' } = process.env;
 
 (async () => {
   const client = new LocalClient({
-    wsUrl: CLIENT_WS_URL,
-    stubId: STUB_ID,
+    /** live debug API-gateway WebSocket url */
+    wsUrl: process.env.CLIENT_WS_URL,
+    /** Stub function id to listen requests from */
+    stubId: process.env.STUB_ID,
+    /** local handler */
     handler,
   });
 
