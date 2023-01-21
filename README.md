@@ -13,11 +13,11 @@ Live debug of Yandex cloud functions with local code on Node.js.
 ![live-debug](https://user-images.githubusercontent.com/1473072/212640296-5047ddc9-2f5b-4366-9ee0-bb32e18f06e1.png)
 
 The process is following:
-1. Stub cloud function receives HTTP request via Stub API gateway
-2. Stub checks in YDB is there connected WS clients (from localhost)
-3. If local client exists stub proxies request as WebSocket message
+1. Stub cloud function receives HTTP request via API gateway
+2. Then it checks in YDB is there connected WebSocket clients from localhost
+3. If local client exist stub function re-sends request to it as WebSocket message
 4. Also stub creates own WebSocket connection to allow local client to respond exactly to this instance of stub
-5. Local client receives WebSocket message, handles request locally and sends response back to stub
+5. Local client receives request, handles it with local code, and sends response back to stub via WebSocket
 6. Stub waits response from client and returns it as a result to incoming HTTP request
 
 > The schema was inspired by [SST Live Lambda Dev](https://docs.sst.dev/live-lambda-development) with some optimizations.
