@@ -25,7 +25,7 @@ export class LocalClient {
   }
 
   async run() {
-    await this.wsClient.ensureConnected();
+    await this.ensureConnected();
     this.waitRequests();
   }
 
