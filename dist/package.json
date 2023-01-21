@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "scripts": {
     "init": "git config core.hooksPath ./scripts/.hooks",
-    "lint": "eslint src test --ext .ts",
+    "lint": "ESLINT_USE_FLAT_CONFIG=true eslint -c eslint.config.mjs src test",
     "test": "LOG_LEVEL=${LOG_LEVEL:-error} mocha -r ts-node/register test/*.spec.ts -t 10000",
     "test:debug": "LOG_LEVEL=debug npm t",
     "example": "ts-node example/debug",
@@ -13,26 +13,27 @@
     "deploy": "./scripts/deploy.sh"
   },
   "lint-staged": {
-    "{src,test}/**/*.ts": "eslint --ext .ts"
+    "{src,test}/**/*.ts": "ESLINT_USE_FLAT_CONFIG=true eslint -c eslint.config.mjs"
   },
   "dependencies": {
     "console-log-level": "^1.4.1",
     "node-fetch": "^2.6.7",
     "pino-pretty": "^9.1.1",
-    "ws": "^8.11.0",
-    "ydb-sdk": "^3.7.0"
+    "ws": "^8.12.0",
+    "ydb-sdk": "^3.8.1"
   },
   "devDependencies": {
     "@types/console-log-level": "^1.4.2",
     "@types/mocha": "^10.0.1",
     "@types/node-fetch": "^2.6.2",
     "@types/pino-pretty": "^5.0.0",
-    "@types/ws": "^8.5.3",
-    "@typescript-eslint/eslint-plugin": "^5.45.1",
-    "@typescript-eslint/parser": "^5.45.1",
+    "@types/ws": "^8.5.4",
+    "@typescript-eslint/eslint-plugin": "^5.48.2",
+    "@typescript-eslint/parser": "^5.48.2",
     "@yandex-cloud/function-types": "^2.1.0",
     "dotenv": "^16.0.3",
-    "eslint": "^8.29.0",
+    "eslint": "^8.32.0",
+    "globals": "^13.19.0",
     "lint-staged": "^13.1.0",
     "markdown-toc": "^1.2.0",
     "mocha": "^10.2.0",

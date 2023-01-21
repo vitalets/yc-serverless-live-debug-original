@@ -2,19 +2,20 @@
  * Cloud function request wrapper.
  */
 import { Handler } from '@yandex-cloud/function-types';
-type HttpEvent = Parameters<Handler.Http>[0];
-type Context = Parameters<Handler.Http>[1];
+export type HttpEvent = Parameters<Handler.Http>[0];
+export type WsEvent = Parameters<Handler.ApiGateway.WebSocket.Connect>[0] | Parameters<Handler.ApiGateway.WebSocket.Message>[0] | Parameters<Handler.ApiGateway.WebSocket.Disconnect>[0];
+export type CloudContext = Parameters<Handler.Http>[1];
 export declare class CloudRequest {
-    event: HttpEvent;
-    context: Context;
+    event: HttpEvent | WsEvent;
+    context: CloudContext;
     private decodedBody?;
-    constructor(event: HttpEvent, context: Context);
+    constructor(event: HttpEvent | WsEvent, context: CloudContext);
     get id(): string;
     get token(): string;
     get functionId(): string;
-    get wsConnectionId(): any;
-    get wsEventType(): any;
-    get body(): string;
+    get wsConnectionId(): string;
+    get wsEventType(): "" | "CONNECT" | "MESSAGE" | "DISCONNECT";
+    get body(): string | undefined;
     isWebSocketRequest(): boolean;
     buildSuccessResponse(body?: unknown): {
         statusCode: number;
@@ -25,5 +26,4 @@ export declare class CloudRequest {
         body: string;
     };
 }
-export {};
 //# sourceMappingURL=cloud-request.d.ts.map

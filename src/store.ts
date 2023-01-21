@@ -6,7 +6,7 @@ import { Handler } from '@yandex-cloud/function-types';
 import { Ydb } from './helpers/ydb';
 import { CloudRequest } from './helpers/cloud-request';
 
-export const handler: Handler.Http = async (event, context) => {
+export const handler: Handler.ApiGateway.WebSocket.Connect = async (event, context) => {
   const req = new CloudRequest(event, context);
   if (req.isWebSocketRequest() && req.wsEventType === 'CONNECT') {
     return saveClientConnectionInfo(req);

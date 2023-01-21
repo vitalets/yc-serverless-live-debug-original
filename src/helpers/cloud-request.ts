@@ -3,13 +3,17 @@
  */
 import { Handler } from '@yandex-cloud/function-types';
 
-type HttpEvent = Parameters<Handler.Http>[ 0 ];
-type Context = Parameters<Handler.Http>[ 1 ];
+export type HttpEvent = Parameters<Handler.Http>[ 0 ];
+export type WsEvent =
+  | Parameters<Handler.ApiGateway.WebSocket.Connect>[ 0 ]
+  | Parameters<Handler.ApiGateway.WebSocket.Message>[ 0 ]
+  | Parameters<Handler.ApiGateway.WebSocket.Disconnect>[ 0 ];
+export type CloudContext = Parameters<Handler.Http>[ 1 ];
 
 export class CloudRequest {
   private decodedBody?: string;
 
-  constructor(public event: HttpEvent, public context: Context) { }
+  constructor(public event: HttpEvent | WsEvent, public context: CloudContext) { }
 
   get id() {
     return this.context.requestId || '';
@@ -24,17 +28,19 @@ export class CloudRequest {
   }
 
   get wsConnectionId() {
-    // @ts-expect-error see https://github.com/yandex-cloud/function-ts-types/issues/8
-    return this.event.requestContext.connectionId;
+    return 'connectionId' in this.event.requestContext
+      ? this.event.requestContext.connectionId
+      : '';
   }
 
   get wsEventType() {
-    // @ts-expect-error see https://github.com/yandex-cloud/function-ts-types/issues/8
-    return this.event.requestContext.eventType;
+    return 'eventType' in this.event.requestContext
+      ? this.event.requestContext.eventType
+      : '';
   }
 
   get body() {
-    if (this.decodedBody === undefined) {
+    if ('body' in this.event && this.decodedBody === undefined) {
       const { body, isBase64Encoded } = this.event;
       this.decodedBody = isBase64Encoded
         ? Buffer.from(body, 'base64').toString('utf8')

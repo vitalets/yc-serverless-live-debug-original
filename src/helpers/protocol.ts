@@ -2,6 +2,7 @@
  * Protocol messages.
  */
 import { Handler } from '@yandex-cloud/function-types';
+import { CloudContext, HttpEvent, WsEvent } from './cloud-request';
 
 export type WsMessage = WsRequest | WsResponse;
 
@@ -12,8 +13,8 @@ export interface WsRequest {
   stubConnectionId: string,
   token: string,
   payload: {
-    event: Parameters<Handler.Http>[0],
-    context: Parameters<Handler.Http>[1],
+    event: HttpEvent | WsEvent,
+    context: CloudContext,
   },
 }
 
