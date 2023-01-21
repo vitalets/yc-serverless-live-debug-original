@@ -76,7 +76,7 @@ const { CLIENT_WS_URL = '', STUB_ID = '' } = process.env;
   await client.run();
 })();
 ```
-Exmaple of `handler.ts`:
+Example of `handler.ts`:
 ```ts
 export const handler = async event => {
   return {
