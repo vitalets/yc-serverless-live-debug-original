@@ -1,1 +1,0 @@
-{"version":3,"file":"ws-apigw.d.ts","sourceRoot":"","sources":["../../src/helpers/ws-apigw.ts"],"names":[],"mappings":"AAAA;;;GAGG;AAOH,wBAAsB,gBAAgB,CACpC,YAAY,EAAE,MAAM,EAGpB,OAAO,EAAE,MAAM,EACf,KAAK,EAAE,MAAM,iBAed;AAED,qBAAa,UAAW,SAAQ,KAAK;IACC,IAAI,EAAE,MAAM;gBAApC,OAAO,EAAE,MAAM,EAAS,IAAI,EAAE,MAAM;CAGjD"}
