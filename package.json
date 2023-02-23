@@ -16,7 +16,9 @@
     "{src,test}/**/*.ts": "cross-env ESLINT_USE_FLAT_CONFIG=true eslint -c eslint.config.mjs"
   },
   "dependencies": {
+    "cdktf": "^0.15.5",
     "console-log-level": "^1.4.1",
+    "constructs": "^10.1.256",
     "node-fetch": "^2.6.7",
     "pino-pretty": "^9.1.1",
     "ws": "^8.12.0",
