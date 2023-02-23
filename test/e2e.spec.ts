@@ -1,16 +1,16 @@
 import assert from 'node:assert/strict';
 import { LocalClient } from '../src/local-client';
-import { runClient, sendStubRequest } from './helpers';
+import { runLocalClient, sendStubRequest } from './helpers';
 
 describe('live debug', () => {
-  let client: LocalClient;
+  let localClient: LocalClient;
 
   before(async () => {
-    client = await runClient();
+    localClient = await runLocalClient();
   });
 
   after(async () => {
-    await client?.close();
+    await localClient?.close();
   });
 
   it('should send requests to local code and back', async () => {

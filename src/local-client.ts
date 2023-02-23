@@ -6,7 +6,7 @@
 import { WsRequest, WsResponse } from './helpers/ws-protocol';
 import { WsClient } from './helpers/ws-client';
 import { logger } from './helpers/logger';
-import { sendToConnection } from './helpers/ws-apigw';
+import { sendToConnection } from './helpers/ws-apigw-grpc';
 import { HttpEvent } from './helpers/cloud-request';
 
 export type LocalClientOptions = {

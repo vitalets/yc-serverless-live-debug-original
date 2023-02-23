@@ -17,6 +17,7 @@
     "{src,test}/**/*.ts": "cross-env ESLINT_USE_FLAT_CONFIG=true eslint -c eslint.config.mjs"
   },
   "dependencies": {
+    "@yandex-cloud/nodejs-sdk": "^2.4.1",
     "cdktf": "^0.15.5",
     "console-log-level": "^1.4.1",
     "constructs": "^10.1.258",

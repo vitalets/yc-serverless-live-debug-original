@@ -6,8 +6,8 @@ import { logger } from '../src/helpers/logger';
 
 const { CLIENT_WS_URL = '', STUB_ID = '', STUB_URL = '' } = process.env;
 
-export async function runClient() {
-  const client = new LocalClient({
+export async function runLocalClient() {
+  const localClient = new LocalClient({
     wsUrl: CLIENT_WS_URL,
     stubId: STUB_ID,
     handler: <Handler.Http>(async event => {
@@ -21,8 +21,8 @@ export async function runClient() {
     })
   });
 
-  await client.run();
-  return client;
+  await localClient.run();
+  return localClient;
 }
 
 export async function sendStubRequest(body: string) {
