@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { LocalClient } from '../src/client';
+import { LocalClient } from '../src/local-client';
 import { runClient, sendStubRequest } from './helpers';
 
 describe('live debug', () => {

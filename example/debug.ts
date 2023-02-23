@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { LocalClient } from '../dist/client';
+import { LocalClient } from '../src/local-client';
 import { handler } from './handler';
 
 const { CLIENT_WS_URL = '', STUB_ID = '', STUB_URL = ''} = process.env;

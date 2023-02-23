@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import fetch from 'node-fetch';
 import { Handler } from '@yandex-cloud/function-types';
-import { LocalClient } from '../src/client';
+import { LocalClient } from '../src/local-client';
 import { logger } from '../src/helpers/logger';
 
 const { CLIENT_WS_URL = '', STUB_ID = '', STUB_URL = '' } = process.env;
