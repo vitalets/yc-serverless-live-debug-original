@@ -29,7 +29,7 @@ export const handler: Handler.Http = async (event, context) => {
 };
 
 async function getLocalClientInfo(req: CloudRequest) {
-  const stubId = req.functionId;
+  const stubId = getStubId(req);
   const connection = await new Ydb(req.token).getConnection(stubId);
   if (!connection) throw new Error(`No client connections for stubId: ${stubId}`);
   const { connectionId, gatewayId } = connection;
@@ -41,7 +41,7 @@ async function sendToLocalClient(clientConnectionId: string, req: CloudRequest) 
   logger.info(`Sending request to local client...`);
   const message: WsRequest = {
     type: 'request',
-    stubId: req.functionId,
+    stubId: getStubId(req),
     reqId: req.id,
     stubConnectionId: wsClient.connectionId,
     token: req.token,
@@ -53,7 +53,8 @@ async function sendToLocalClient(clientConnectionId: string, req: CloudRequest) 
   try {
     await sendToConnection(clientConnectionId, message, req.token);
   } catch (e) {
-    if (e instanceof ApigwError && e.code === 5) {
+    // todo: check e.code
+    if (e instanceof ApigwError) {
       throw new Error(`No clients connected.`);
     } else {
       throw e;
@@ -80,4 +81,8 @@ async function connectToWs(gatewayId: string) {
 
 function buildStubWsUrl(gatewayId: string) {
   return `wss://${gatewayId}.apigw.yandexcloud.net/ws/stub`;
+}
+
+function getStubId(req: CloudRequest) {
+  return req.event.headers['X-Stub-Id'] || req.functionId;
 }
