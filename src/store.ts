@@ -18,8 +18,9 @@ export const handler: Handler.ApiGateway.WebSocket.Connect = async (event, conte
 async function saveClientConnectionInfo(req: CloudRequest) {
   try {
     const stubId = req.event.headers['X-Stub-Id'];
+    const gatewayId = req.event.headers['X-Serverless-Gateway-Id'];
     logger.info(`client connect: stubId=${stubId}, connId=${req.wsConnectionId}`);
-    await new Ydb(req.token).saveConnection(stubId, req.wsConnectionId);
+    await new Ydb(req.token).saveConnection(stubId, req.wsConnectionId, gatewayId);
     return req.buildSuccessResponse();
   } catch (e) {
     logger.error(e);

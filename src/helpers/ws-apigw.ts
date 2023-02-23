@@ -15,7 +15,7 @@ export async function sendToConnection(
   message: object,
   token: string
 ) {
-  logger.info(`WS sending message to connection: ${connectionId}`);
+  logger.debug(`WS sending message to connection: ${connectionId}`);
   const method = 'POST';
   const url = URL_TPL.replace('{connectionId}', connectionId);
   const headers = {
@@ -27,7 +27,7 @@ export async function sendToConnection(
     const { message, code } = await res.json();
     throw new ApigwError(message, code);
   }
-  logger.info(`WS message sent to connection: ${connectionId}`);
+  logger.debug(`WS message sent to connection: ${connectionId}`);
 }
 
 export class ApigwError extends Error {

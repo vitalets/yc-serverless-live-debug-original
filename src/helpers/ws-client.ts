@@ -4,7 +4,7 @@
 import http from 'node:http';
 import { once } from 'node:events';
 import WebSocket from 'ws';
-import { WsMessage } from './protocol';
+import { WsMessage } from './ws-protocol';
 import { logger } from './logger';
 
 type WaitFn = (message: WsMessage) => unknown;
@@ -21,7 +21,7 @@ export class WsClient {
   protected waitFns = new Map<WaitFn, WaitFnData>();
 
   constructor(
-    protected wsUrl: string,
+    public wsUrl: string,
     protected headers: Record<string, string> = {}
   ) {}
 

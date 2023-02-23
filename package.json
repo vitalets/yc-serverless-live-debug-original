@@ -5,6 +5,7 @@
   "scripts": {
     "init": "git config core.hooksPath ./scripts/.hooks",
     "lint": "ESLINT_USE_FLAT_CONFIG=true eslint -c eslint.config.mjs src test",
+    "lint:fix": "npm run lint -- --fix",
     "test": "LOG_LEVEL=${LOG_LEVEL:-error} mocha -r ts-node/register test/*.spec.ts -t 10000",
     "test:debug": "LOG_LEVEL=debug npm t",
     "example": "ts-node example/debug",
@@ -18,11 +19,11 @@
   "dependencies": {
     "cdktf": "^0.15.5",
     "console-log-level": "^1.4.1",
-    "constructs": "^10.1.256",
+    "constructs": "^10.1.258",
     "node-fetch": "^2.6.7",
-    "pino-pretty": "^9.1.1",
-    "ws": "^8.12.0",
-    "ydb-sdk": "^3.8.1"
+    "pino-pretty": "^9.3.0",
+    "ws": "^8.12.1",
+    "ydb-sdk": "^3.9.0"
   },
   "devDependencies": {
     "@types/console-log-level": "^1.4.2",
@@ -30,18 +31,18 @@
     "@types/node-fetch": "^2.6.2",
     "@types/pino-pretty": "^5.0.0",
     "@types/ws": "^8.5.4",
-    "@typescript-eslint/eslint-plugin": "^5.48.2",
-    "@typescript-eslint/parser": "^5.48.2",
+    "@typescript-eslint/eslint-plugin": "^5.53.0",
+    "@typescript-eslint/parser": "^5.53.0",
     "@yandex-cloud/function-types": "^2.1.0",
     "cross-env": "^7.0.3",
     "dotenv": "^16.0.3",
-    "eslint": "^8.32.0",
-    "globals": "^13.19.0",
-    "lint-staged": "^13.1.0",
+    "eslint": "^8.34.0",
+    "globals": "^13.20.0",
+    "lint-staged": "^13.1.2",
     "markdown-toc": "^1.2.0",
     "mocha": "^10.2.0",
     "ts-node": "^10.9.1",
-    "typescript": "^4.9.4"
+    "typescript": "^4.9.5"
   },
   "author": "Vitaliy Potapov",
   "license": "MIT"

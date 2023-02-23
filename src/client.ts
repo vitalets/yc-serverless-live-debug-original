@@ -3,10 +3,11 @@
  * and sends result back to stub function.
  */
 
-import { WsRequest, WsResponse } from './helpers/protocol';
+import { WsRequest, WsResponse } from './helpers/ws-protocol';
 import { WsClient } from './helpers/ws-client';
 import { logger } from './helpers/logger';
 import { sendToConnection } from './helpers/ws-apigw';
+import { HttpEvent } from './helpers/cloud-request';
 
 export type LocalClientOptions = {
   wsUrl: string,
@@ -42,7 +43,7 @@ export class LocalClient {
     logger.info(`Waiting requests from stub...`);
     this.wsClient.onJsonMessage = async message => {
       if (message.type !== 'request') return;
-      logger.info(`Got request from stub: ${message.reqId}`);
+      this.logRequestInfo(message);
       const responsePayload = await this.getResponsePayload(message);
       await this.sendResponse(message, responsePayload);
     };
@@ -53,7 +54,6 @@ export class LocalClient {
       const { event, context } = request.payload;
       logger.info(`Waiting response from local code...`);
       const payload = await this.options.handler(event, context);
-      logger.info(`Got response from local code`);
       return payload as WsResponse['payload'];
     } catch (e) {
       logger.error(e);
@@ -71,6 +71,15 @@ export class LocalClient {
       payload,
     };
     await sendToConnection(message.stubConnectionId, response, message.token);
-    logger.info('Response sent');
+    logger.info('Response sent.');
+  }
+
+  protected logRequestInfo(message: WsRequest) {
+    const { event } = message.payload;
+    const method = (event as HttpEvent).httpMethod;
+    // @ts-expect-error url not in types
+    const url = event.url;
+    logger.info(`---`);
+    logger.info(`${method} ${url}`);
   }
 }
