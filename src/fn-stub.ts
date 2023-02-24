@@ -84,5 +84,5 @@ function buildStubWsUrl(gatewayId: string) {
 }
 
 function getStubId(req: CloudRequest) {
-  return req.event.headers['X-Stub-Id'] || req.functionId;
+  return req.headers['X-Stub-Id'] || req.functionId;
 }

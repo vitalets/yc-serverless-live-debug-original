@@ -7,8 +7,9 @@ const { CLIENT_WS_URL = '', STUB_ID = '', STUB_URL = ''} = process.env;
 (async () => {
   const client = new LocalClient({
     wsUrl: CLIENT_WS_URL,
-    stubId: STUB_ID,
-    handler,
+    functions: {
+      [STUB_ID]: handler,
+    },
   });
 
   await client.run();

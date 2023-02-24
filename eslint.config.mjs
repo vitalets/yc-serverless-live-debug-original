@@ -29,6 +29,7 @@ export default [
       "no-multiple-empty-lines": [error, { max: 1 }],
       "space-before-function-paren": [error, { anonymous: "always", named: "never", asyncArrow: "always" }],
       "@typescript-eslint/no-unused-vars": error,
+      "no-undef": 0,
     }
   },
   {

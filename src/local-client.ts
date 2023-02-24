@@ -7,21 +7,22 @@ import { WsRequest, WsResponse } from './helpers/ws-protocol';
 import { WsClient } from './helpers/ws-client';
 import { logger } from './helpers/logger';
 import { sendToConnection } from './helpers/ws-apigw-grpc';
-import { HttpEvent } from './helpers/cloud-request';
+import { CloudHandler } from './helpers/cloud-request';
+
+export type stubId = string;
 
 export type LocalClientOptions = {
   wsUrl: string,
-  /** Unique id of stub function. Allows to route multiple stubs/clients via single ydb */
-  stubId: string,
-  handler: Function, // eslint-disable-line @typescript-eslint/ban-types
+  functions: Record<stubId, CloudHandler>,
 }
 
 export class LocalClient {
   wsClient: WsClient;
 
   constructor(protected options: LocalClientOptions) {
+    const stubIds = Object.keys(options.functions).join(',');
     this.wsClient = new WsClient(options.wsUrl, {
-      'X-Stub-Id': options.stubId,
+      'X-Stub-Id': stubIds,
     });
   }
 
@@ -40,7 +41,7 @@ export class LocalClient {
   }
 
   protected waitRequests() {
-    logger.info(`Waiting requests from stub...`);
+    logger.info(`Waiting requests from stubs...`);
     this.wsClient.onJsonMessage = async message => {
       if (message.type !== 'request') return;
       this.logRequestInfo(message);
@@ -53,8 +54,10 @@ export class LocalClient {
     try {
       const { event, context } = request.payload;
       logger.info(`Waiting response from local code...`);
-      const payload = await this.options.handler(event, context);
-      return payload as WsResponse['payload'];
+      const handler = this.options.functions[request.stubId];
+      if (!handler) throw new Error(`Unknown stubId: ${request.stubId}`);
+      // @ts-expect-error to keep things simple
+      return await handler(event, context) as WsResponse['payload'];
     } catch (e) {
       logger.error(e);
       return {
@@ -76,7 +79,7 @@ export class LocalClient {
 
   protected logRequestInfo(message: WsRequest) {
     const { event } = message.payload;
-    const method = (event as HttpEvent).httpMethod;
+    const method = 'httpMethod' in event ? event.httpMethod : '';
     // @ts-expect-error url not in types
     const url = event.url;
     logger.info(`---`);

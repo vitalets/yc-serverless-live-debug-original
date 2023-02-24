@@ -1,12 +1,16 @@
 import assert from 'node:assert/strict';
 import { LocalClient } from '../src/local-client';
-import { runLocalClient, sendStubRequest } from './helpers';
+import { createEchoHandler, runLocalClient, sendStubRequest } from './helpers';
 
-describe('live debug', () => {
+const { STUB_ID = '' } = process.env;
+
+describe('live debug (1 stub)', () => {
   let localClient: LocalClient;
 
   before(async () => {
-    localClient = await runLocalClient();
+    localClient = await runLocalClient({
+      [STUB_ID]: createEchoHandler('local'),
+    });
   });
 
   after(async () => {
@@ -29,3 +33,25 @@ describe('live debug (no clients)', () => {
   });
 });
 
+describe('live debug (2 stubs)', () => {
+  let localClient: LocalClient;
+
+  before(async () => {
+    localClient = await runLocalClient({
+      [STUB_ID]: createEchoHandler('stub-1'),
+      myStubId: createEchoHandler('stub-2'),
+    });
+  });
+
+  after(async () => {
+    await localClient?.close();
+  });
+
+  it('should proxy requests by different stub ids', async () => {
+    const response = await sendStubRequest('foo');
+    assert.equal(response, 'Response from stub-1: foo');
+
+    const response2 = await sendStubRequest('bar', 'myStubId');
+    assert.equal(response2, 'Response from stub-2: bar');
+  });
+});
