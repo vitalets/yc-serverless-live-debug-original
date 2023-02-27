@@ -9,6 +9,7 @@ Local debug of Yandex Cloud Functions on Node.js.
     + [Debug single function](#debug-single-function)
     + [Debug several functions](#debug-several-functions)
     + [Debug other triggers](#debug-other-triggers)
+- [Watch mode](#watch-mode)
 
 <!-- tocstop -->
 
@@ -32,6 +33,7 @@ Deploy cloud components:
 ```
 npx live-debug deploy
 ```
+Review terraform plan and press **Approve**.
 
 > By default this command uses [yc cli](https://cloud.yandex.ru/docs/cli/) to get auth token and cloud id. You can manually set these values by `YC_TOKEN` and `YC_CLOUD_ID` env vars
 
@@ -46,11 +48,27 @@ YC_SERVICE_ACCOUNT_KEY_FILE=path/to/key.json npx live-debug deploy
 LIVE_DEBUG_FOLDER_NAME=live-debug-test npx live-debug deploy
 ```
 
-Create `live-debug.config.ts` (or `live-debug.config.js`) in project root:
+Create `live-debug.config.ts` in project root:
 ```ts
 import { defineConfig } from '@vitalets/live-debug';
+import { Handler } from '@yandex-cloud/function-types';
 
 export default defineConfig({
+  handler: <Handler.Http>(event => {
+    console.log('got request', event);
+    return {
+      statusCode: 200,
+      body: `Hello from local code!`,
+    };
+  })
+});
+```
+
+Or `live-debug.config.js` (cjs):
+```js
+const { defineConfig } = require('@vitalets/live-debug');
+
+module.exports = defineConfig({
   handler: event => {
     console.log('got request', event);
     return {
@@ -76,8 +94,11 @@ Waiting requests...
 GET /?
 Response sent
 ```
+Click provided link and check console.
 
 See [example](/example) for more details.
+
+> Don't forget to add `.live-debug` dir to `.gitignore`
 
 ## Usage
 On server all requests are handled by single `stub` function.
@@ -126,3 +147,6 @@ export default defineConfig({
   })
 });
 ```
+
+## Watch mode
+Planned.
