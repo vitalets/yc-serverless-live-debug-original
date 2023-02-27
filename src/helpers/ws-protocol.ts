@@ -8,7 +8,6 @@ export type WsMessage = WsRequest | WsResponse;
 export interface WsRequest {
   type: 'request',
   reqId: string,
-  stubId: string,
   stubConnectionId: string,
   token: string,
   payload: {

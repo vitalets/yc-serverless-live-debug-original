@@ -1,37 +1,52 @@
 {
-  "name": "yc-serverless-live-debug",
+  "name": "@vitales/live-debug",
   "description": "Live debug of Yandex cloud functions",
   "version": "1.0.0",
+  "bin": {
+    "live-debug": "dist/client/cli/live-debug"
+  },
+  "main": "dist/client/index.js",
+  "files": [
+    "dist",
+    "README.md",
+    "cdktf.json"
+  ],
   "scripts": {
     "init": "git config core.hooksPath ./scripts/.hooks",
-    "lint": "ESLINT_USE_FLAT_CONFIG=true eslint -c eslint.config.mjs src test",
+    "cdktf:get": "npx cdktf get --output src/cli/.gen",
+    "lint": "eslint src test",
     "lint:fix": "npm run lint -- --fix",
     "test": "LOG_LEVEL=${LOG_LEVEL:-error} mocha -r ts-node/register test/*.spec.ts -t 10000",
-    "test:debug": "LOG_LEVEL=debug npm t",
-    "example": "ts-node example/debug",
+    "test:d": "LOG_LEVEL=debug npm t",
+    "example:deploy": "npm run build && pushd example; ./../dist/client/cli/live-debug deploy; popd",
+    "example:run": "npm run build && pushd example; ./../dist/client/cli/live-debug run; popd",
     "toc": "markdown-toc README.md -i",
     "build": "./scripts/build.sh",
-    "deploy": "./scripts/deploy.sh"
+    "release": "npm run lint && npm t && npm run build && np --yolo --no-release-draft"
   },
   "lint-staged": {
-    "{src,test}/**/*.ts": "cross-env ESLINT_USE_FLAT_CONFIG=true eslint -c eslint.config.mjs"
+    "{src,test}/**/*.ts": "eslint"
   },
   "dependencies": {
+    "@types/console-log-level": "^1.4.2",
+    "@types/ws": "^8.5.4",
+    "@types/yargs": "^17.0.22",
     "@yandex-cloud/nodejs-sdk": "^2.4.1",
     "cdktf": "^0.15.5",
+    "cdktf-cli": "^0.15.5",
     "console-log-level": "^1.4.1",
     "constructs": "^10.1.258",
-    "node-fetch": "^2.6.7",
     "pino-pretty": "^9.3.0",
+    "ts-node": "^10.9.1",
     "ws": "^8.12.1",
+    "yargs": "^17.7.1",
     "ydb-sdk": "^3.9.0"
   },
   "devDependencies": {
-    "@types/console-log-level": "^1.4.2",
     "@types/mocha": "^10.0.1",
+    "@types/node": "^18.14.2",
     "@types/node-fetch": "^2.6.2",
     "@types/pino-pretty": "^5.0.0",
-    "@types/ws": "^8.5.4",
     "@typescript-eslint/eslint-plugin": "^5.53.0",
     "@typescript-eslint/parser": "^5.53.0",
     "@yandex-cloud/function-types": "^2.1.0",
@@ -42,9 +57,14 @@
     "lint-staged": "^13.1.2",
     "markdown-toc": "^1.2.0",
     "mocha": "^10.2.0",
-    "ts-node": "^10.9.1",
+    "node-fetch": "^2.6.9",
+    "np": "^7.6.3",
     "typescript": "^4.9.5"
   },
   "author": "Vitaliy Potapov",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/vitalets/yc-serverless-live-debug.git"
+  },
   "license": "MIT"
 }

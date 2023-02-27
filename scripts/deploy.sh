@@ -6,10 +6,11 @@
 # Exit on any error
 set -euo pipefail
 
-npm run build
+#npm run build
 
 export YC_TOKEN=$(yc iam create-token)
-export YC_CLOUD_ID=$(yc config get cloud-id)
 
 # terraform -chdir=terraform apply
-cdktf deploy
+npx cdktf deploy
+
+# npx ts-node YC_TOKEN=$(yc iam create-token) npx cdktf destroy

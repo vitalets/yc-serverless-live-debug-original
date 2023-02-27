@@ -1,12 +1,12 @@
 openapi: 3.0.0
 info:
-  title: ${apigw_name}
+  title: <% title %>
   version: 1.0.0
 
 paths:
   /ws/stub:
     x-yc-apigateway-websocket-connect:
-      summary: WS connections from stub function - just accept
+      summary: WS connections from stub function - accept without fn call
       x-yc-apigateway-integration:
         type: dummy
         http_code: 200
@@ -14,23 +14,24 @@ paths:
           '*': ''
   /ws/client:
     x-yc-apigateway-websocket-connect:
-      summary: WS connections from local client - store connection id in db
+      summary: WS connections from local client - accept and store connection info in db
       x-yc-apigateway-integration:
         type: cloud_functions
-        function_id: ${store_fn_id}
+        function_id: <% store_fn_id %>
         tag: $latest
-        service_account_id: ${sa_id}
+        service_account_id: <% sa_id %>
   /{path+}:
     x-yc-apigateway-any-method:
-      summary: HTTP requests to stub function - proxied to local code via WS
+      summary: HTTP request to stub function - proxy to local code
       parameters:
         - name: path
           in: path
-          required: true
+          required: false
           schema:
             type: string
       x-yc-apigateway-integration:
         type: cloud_functions
-        function_id: ${stub_fn_id}
+        function_id: <% stub_fn_id %>
         tag: $latest
-        service_account_id: ${sa_id}
+        service_account_id: <% sa_id %>
+

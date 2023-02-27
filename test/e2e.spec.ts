@@ -1,57 +1,36 @@
 import assert from 'node:assert/strict';
-import { LocalClient } from '../src/local-client';
-import { createEchoHandler, runLocalClient, sendStubRequest } from './helpers';
+import { LocalClient, runLocalClient } from '../src/client';
+import { createEchoHandler, readOutputs, sendStubRequest } from './helpers';
 
-const { STUB_ID = '' } = process.env;
+let localClient: LocalClient;
 
-describe('live debug (1 stub)', () => {
-  let localClient: LocalClient;
+describe('live debug', () => {
+  /** You should run 'npm run example:deploy' before tests */
+  // todo: move outputs to helpers?
+  const outputs = readOutputs('example/.live-debug/outputs.json');
+  const stubUrl = `https://${outputs.apigwHost}`;
 
-  before(async () => {
-    localClient = await runLocalClient({
-      [STUB_ID]: createEchoHandler('local'),
-    });
-  });
-
-  after(async () => {
+  afterEach(async () => {
     await localClient?.close();
   });
 
-  it('should send requests to local code and back', async () => {
-    const response = await sendStubRequest('foo');
-    assert.equal(response, 'Response from local: foo');
+  it('successful request', async () => {
+    localClient = await runLocalClient({
+      wsHost: outputs.apigwHost,
+      stubId: outputs.stubId,
+      handler: createEchoHandler('foo'),
+    });
 
-    const response2 = await sendStubRequest('bar');
-    assert.equal(response2, 'Response from local: bar');
+    const response = await sendStubRequest(stubUrl, '123');
+    assert.equal(response, 'Response from foo: 123');
+
+    const response2 = await sendStubRequest(stubUrl, '456');
+    assert.equal(response2, 'Response from foo: 456');
   });
-});
 
-describe('live debug (no clients)', () => {
-  it('should throw error if no client connected', async () => {
-    const promise = sendStubRequest('foo');
+  it('no local clients', async () => {
+    const promise = sendStubRequest(stubUrl, '123');
     await assert.rejects(promise, /No clients connected/);
   });
-});
 
-describe('live debug (2 stubs)', () => {
-  let localClient: LocalClient;
-
-  before(async () => {
-    localClient = await runLocalClient({
-      [STUB_ID]: createEchoHandler('stub-1'),
-      myStubId: createEchoHandler('stub-2'),
-    });
-  });
-
-  after(async () => {
-    await localClient?.close();
-  });
-
-  it('should proxy requests by different stub ids', async () => {
-    const response = await sendStubRequest('foo');
-    assert.equal(response, 'Response from stub-1: foo');
-
-    const response2 = await sendStubRequest('bar', 'myStubId');
-    assert.equal(response2, 'Response from stub-2: bar');
-  });
 });

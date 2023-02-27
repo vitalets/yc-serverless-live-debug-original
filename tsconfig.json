@@ -6,7 +6,8 @@
     "useUnknownInCatchVariables": false,
     "forceConsistentCasingInFileNames": true,
     "moduleResolution": "node",
+    "resolveJsonModule": true,
     "esModuleInterop": true,
   },
-  "include": [ "src", "test", ".gen" ]
+  "include": [ "src", "test", "scripts" ]
 }

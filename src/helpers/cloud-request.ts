@@ -3,7 +3,6 @@
  */
 import { Handler } from '@yandex-cloud/function-types';
 
-// todo: export it from @yandex-cloud/function-types
 export type CloudHandler =
   | Handler.ApiGateway.Authorizer
   | Handler.ApiGateway.WebSocket.Connect

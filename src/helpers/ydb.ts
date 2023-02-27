@@ -58,9 +58,9 @@ export class Ydb {
       DECLARE $gatewayId AS Utf8;
 
       UPSERT INTO ${CONNECTIONS_TABLE} (stubId, connectionId, gatewayId, createdAt)
-      VALUES ($stubId, $connectionId, $gatewayId, CurrentUtcTimestamp());
+      VALUES ($stubId, $connectionId, $gatewayId, CurrentUtcTimestamp())
     `;
-    const result = await this.withSession(async session => {
+    await this.withSession(async session => {
       const preparedQuery = await this.ensureTable(() => session.prepareQuery(query));
       const params = {
         '$stubId': TypedValues.utf8(stubId),
@@ -69,7 +69,7 @@ export class Ydb {
       };
       return session.executeQuery(preparedQuery, params);
     });
-    logger.debug('Connection saved', result);
+    logger.debug(`Connection saved in ydb`);
   }
 
   protected async ensureTable<T>(fn: () => T) {

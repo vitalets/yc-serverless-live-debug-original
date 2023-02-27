@@ -1,13 +1,14 @@
-import globals from "globals";
-import tsParser from "@typescript-eslint/parser";
-import tsPlugin from "@typescript-eslint/eslint-plugin";
+const globals = require('globals');
+const tsParser = require('@typescript-eslint/parser');
+const tsPlugin = require('@typescript-eslint/eslint-plugin');
 
 const error = "error";
 
-export default [
+module.exports = [
   "eslint:recommended",
   {
     files: [ "**/*.ts" ],
+    ignores: ["src/client/.gen/**"],
     languageOptions: {
       parser: tsParser,
       globals: globals.node,
