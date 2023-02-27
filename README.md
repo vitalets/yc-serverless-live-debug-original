@@ -33,6 +33,14 @@ Deploy cloud components:
 npx live-debug deploy
 ```
 
+> By default this command uses [yc cli](https://cloud.yandex.ru/docs/cli/) to get auth token and cloud id. You can manually set these values by `YC_TOKEN` and `YC_CLOUD_ID` env vars
+
+> To authorize by service account key use env var:
+`YC_SERVICE_ACCOUNT_KEY_FILE=path/to/key.json npx live-debug deploy`
+
+
+> By default all components will be created in separate catalogue `live-debug`. You can change this name using `LIVE_DEBUG_FOLDER_NAME` env var
+
 Create `live-debug.config.ts` (or `live-debug.config.js`) in project root:
 ```ts
 import { defineConfig } from '@vitalets/live-debug';
