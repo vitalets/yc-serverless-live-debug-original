@@ -1,7 +1,7 @@
 {
   "name": "@vitalets/live-debug",
   "description": "Live debug of Yandex cloud functions",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "bin": {
     "live-debug": "dist/client/cli/live-debug"
   },
