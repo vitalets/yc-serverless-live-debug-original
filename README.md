@@ -4,106 +4,112 @@ Local debug of Yandex Cloud Functions on Node.js.
 <!-- toc -->
 
 - [How it works](#how-it-works)
-- [Deploy](#deploy)
+- [Setup](#setup)
 - [Usage](#usage)
+    + [Debug single function](#debug-single-function)
+    + [Debug several functions](#debug-several-functions)
+    + [Debug other triggers](#debug-other-triggers)
 
 <!-- tocstop -->
 
 ## How it works
-![live-debug](https://user-images.githubusercontent.com/1473072/212640296-5047ddc9-2f5b-4366-9ee0-bb32e18f06e1.png)
+![diagram](https://user-images.githubusercontent.com/1473072/221630804-855844d9-7b38-40ed-a5ce-b62939d65ae1.png)
 
-The process is following:
-1. Stub cloud function receives HTTP request via API gateway
-2. Then it checks in YDB is there connected WebSocket clients from localhost
-3. If local client exist stub function re-sends request to it as WebSocket message
-4. Also stub creates own WebSocket connection to allow local client to respond exactly to this instance of stub
-5. Local client receives request, handles it with local code, and sends response back to stub via WebSocket
-6. Stub waits response from client and returns it as a result to incoming HTTP request
+Main components:
+1. `stub` - cloud function that proxies requests to local code
+2. `store` - cloud function that stores WebSocket connections info in YDB. This connection info is later used by `stub` to know where to proxy request
+3. `client` - CLI app running on local machine and handling requests coming by WebSocket
 
-> The schema was inspired by [SST Live Lambda Dev](https://docs.sst.dev/live-lambda-development) with some optimizations.
+> The schema was inspired by [SST Live Lambda Dev](https://docs.sst.dev/live-lambda-development)
 
-## Deploy
-To use live debug your need to deploy required components to your Yandex cloud account.
-By default all components are deployed to separate cloud folder `live-debug`.
-To deploy service you need [Yandex CLI](https://cloud.yandex.ru/docs/cli/) and [Terraform](https://cloud.yandex.ru/docs/tutorials/infrastructure-management/terraform-quickstart).
+## Setup
+Install package:
+```
+npm i -D @vitalets/live-debug
+```
 
-1. Clone the repo
-   ```
-   git clone ...
-   cd yc-serverless-live-debug
-   ```
-2. Install dependencies
-   ```
-   npm ci
-   ```
-3. Run deploy commnd
-   ```
-   npm run deploy
-   ```
-4. Create `.env` file with the following values from deploy output:
-   ```
-   CLIENT_WS_URL=
-   STUB_ID=
-   STUB_URL=
-   ```
-5. Open YDB [web console](https://console.cloud.yandex.ru) and create table from [terraform/ydb.sql](/terraform/ydb.sql)
+Deploy cloud components:
+```
+npx live-debug deploy
+```
 
-6. Run tests to ensure everything works:
-   ```
-   npm t
-   ```
-7. Run example and click provided url:
-   ```
-   npm run example
-   ```
-   Output:
-   ```
-   WS connection opened
-   Waiting requests from stub...
-   Click this url to send request: https://**********.apigw.yandexcloud.net
-   Got request from stub: 58ea5f4c-bc04-4275-b62e-dce809591926
-   Waiting response from local code...
-   Got response from local code
-   WS sending message to connection: d20438soh73hn36us5kcd25irkmg6611n
-   WS message sent to connection: d20438soh73hn36us5kcd25irkmg6611n
-   Response sent
-   ```
-
-## Usage
-To debug cloud function locally create `debug.ts` like follows:
-
+Create `live-debug.config.ts` (or `live-debug.config.js`) in project root:
 ```ts
-/** local client that connects to WebSocket */
-import { LocalClient } from 'path/to/yc-serverless-live-debug/dist/client';
-/** your code to handle requests */
-import { handler } from 'path/to/your/handler';
+import { defineConfig } from '@vitalets/live-debug';
 
-(async () => {
-  const client = new LocalClient({
-    /** live debug API-gateway WebSocket url */
-    wsUrl: process.env.CLIENT_WS_URL,
-    /** Stub function id to listen requests from */
-    stubId: process.env.STUB_ID,
-    /** local handler */
-    handler,
-  });
+export default defineConfig({
+  handler: event => {
+    console.log('got request', event);
+    return {
+      statusCode: 200,
+      body: `Hello from local code!`,
+    };
+  }
+});
+```
 
-  await client.run();
-})();
+Run live debug:
 ```
-Example of `handler.ts`:
-```ts
-export const handler = async event => {
-  return {
-    statusCode: 200,
-    body: `Got request: ${event.body}`
-  };
-}
+npx live-debug run
 ```
-Start debugging:
+Expected output:
 ```
-ts-node debug.ts
+Reading config: /project/live-debug.config
+Running local client...
+WS connection opened
+Local client connected
+Check url: https://**********.apigw.yandexcloud.net
+Waiting requests...
+GET /?
+Response sent
 ```
 
 See [example](/example) for more details.
 
+## Usage
+On server all requests are handled by single `stub` function.
+You can setup routing for your needs in the config.
+
+#### Debug single function
+For single function you can just assign handler from your code:
+```ts
+import { defineConfig } from '@vitalets/live-debug';
+import { handler } from './path/to/your/handler';
+
+export default defineConfig({
+  handler
+});
+```
+
+#### Debug several functions
+To debug several functions simultaneously you can setup routing by url:
+```ts
+import { defineConfig } from '@vitalets/live-debug';
+import { Handler } from '@yandex-cloud/function-types';
+import { handlerA } from './path/to/your/handler-a';
+import { handlerB } from './path/to/your/handler-b';
+
+export default defineConfig({
+  handler: <Handler.Http>((event, ctx) => {
+    // @ts-expect-error url is not typed
+    const url = String(event.url);
+    if (url.startsWith('/handler-a')) return handlerA(event, ctx);
+    if (url.startsWith('/handler-b')) return handlerB(event, ctx);
+    return { statusCode: 200, body: 'No handler' };
+  })
+});
+```
+
+#### Debug other triggers
+You can debug other triggers: message queue, object storage, etc.
+In cloud console configure needed trigger to point to `stub` function.
+```ts
+import { defineConfig } from '@vitalets/live-debug';
+import { Handler } from '@yandex-cloud/function-types';
+
+export default defineConfig({
+  handler: <Handler.MessageQueue>(event => {
+    console.log(event.messages);
+  })
+});
+```
