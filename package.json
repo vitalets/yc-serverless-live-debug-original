@@ -22,7 +22,7 @@
     "example:run": "npm run build && pushd example; ./../dist/client/cli/live-debug run; popd",
     "toc": "markdown-toc README.md -i",
     "build": "./scripts/build.sh",
-    "release": "npm run lint && npm t && npm run build && np --yolo --no-release-draft"
+    "release": "npm run lint && npm run build && npm t && np --yolo --no-release-draft"
   },
   "lint-staged": {
     "{src,test}/**/*.ts": "eslint"
