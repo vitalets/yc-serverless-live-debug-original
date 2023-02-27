@@ -59,6 +59,7 @@ export class LocalClient {
     logger.info(`Waiting requests...`);
     this.wsClient.onJsonMessage = async message => {
       if (message.type === 'request') {
+        this.logRequest(message.payload);
         const responsePayload = await this.getResponsePayload(message);
         await this.sendResponse(message, responsePayload);
       } else {
@@ -89,5 +90,16 @@ export class LocalClient {
     };
     await sendToConnection(message.stubConnectionId, response, message.token);
     logger.info('Response sent');
+  }
+
+  protected logRequest({ event }: WsRequest['payload']) {
+    if ('httpMethod' in event) {
+      // @ts-expect-error event.url is not typed
+      logger.info(`${event.httpMethod} ${event.url}`);
+    }
+    if ('messages' in event && 'event_metadata' in event.messages[0]) {
+      logger.info(`TRIGGER ${event.messages[0]?.event_metadata?.event_type}`);
+    }
+    // todo: add more triggers
   }
 }
