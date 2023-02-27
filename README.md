@@ -101,11 +101,11 @@ See [example](/example) for more details.
 > Don't forget to add `.live-debug` dir to `.gitignore`
 
 ## Usage
-On server all requests are handled by single `stub` function.
+All requests on server are handled by single `stub` function.
 You can setup routing for your needs in the config.
 
 #### Debug single function
-For single function you can just assign handler from your code:
+For single function you can just assign handler:
 ```ts
 import { defineConfig } from '@vitalets/live-debug';
 import { handler } from './path/to/your/handler';
@@ -116,7 +116,7 @@ export default defineConfig({
 ```
 
 #### Debug several functions
-To debug several functions simultaneously you can setup routing by url:
+To debug several functions you can setup routing by url:
 ```ts
 import { defineConfig } from '@vitalets/live-debug';
 import { Handler } from '@yandex-cloud/function-types';
@@ -135,7 +135,7 @@ export default defineConfig({
 ```
 
 #### Debug other triggers
-You can debug other triggers: message queue, object storage, etc.
+You can debug all triggers: message queue, object storage, etc.
 In cloud console configure needed trigger to point to `stub` function.
 ```ts
 import { defineConfig } from '@vitalets/live-debug';
