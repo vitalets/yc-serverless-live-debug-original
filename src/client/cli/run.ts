@@ -13,7 +13,7 @@ import { logger } from '../../helpers/logger';
 
 export default async function () {
   const config = await readConfig();
-  const outputs = await readOutputs();
+  const outputs = await readStackOutputs();
   logger.info(`Running local client...`);
   await runLocalClient({
     stubId: outputs.stubId,
@@ -24,7 +24,7 @@ export default async function () {
   // TODO: watch changes
 }
 
-async function readOutputs() {
+async function readStackOutputs() {
   const outputsFile = path.resolve('.live-debug', 'outputs.json');
   if (!fs.existsSync(outputsFile)) {
     logger.info(`Outputs file not found: ${outputsFile}`);
