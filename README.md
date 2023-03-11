@@ -1,5 +1,5 @@
 # yc-serverless-live-debug
-Local debug of Yandex Cloud Functions on Node.js.
+Live debug of Yandex Cloud Functions in Node.js.
 
 <!-- toc -->
 
@@ -9,7 +9,7 @@ Local debug of Yandex Cloud Functions on Node.js.
     + [Debug single function](#debug-single-function)
     + [Debug several functions](#debug-several-functions)
     + [Debug other triggers](#debug-other-triggers)
-- [Watch mode](#watch-mode)
+- [Watch](#watch)
 
 <!-- tocstop -->
 
@@ -24,9 +24,11 @@ Main components:
 > The schema was inspired by [SST Live Lambda Dev](https://docs.sst.dev/live-lambda-development)
 
 ## Setup
+Ensure that you have [Terraform installed](https://cloud.yandex.ru/docs/tutorials/infrastructure-management/terraform-quickstart).
+
 Install package:
 ```
-npm i -D @vitalets/live-debug
+npm i -D @yandex-cloud/sls-live-debug
 ```
 
 Deploy cloud components:
@@ -40,17 +42,17 @@ Review terraform plan and press **Approve**.
 > To authorize by service account key use `YC_SERVICE_ACCOUNT_KEY_FILE` env var:
 
 ```
-YC_SERVICE_ACCOUNT_KEY_FILE=path/to/key.json npx live-debug deploy
+YC_SERVICE_ACCOUNT_KEY_FILE=path/to/key.json npx sls-live-debug deploy
 ```
 
-> By default all components will be created in separate catalogue `live-debug`. You can change this name using `LIVE_DEBUG_FOLDER_NAME` env var:
+> By default all components will be created in separate cloud catalogue `live-debug`. You can change this name using `LIVE_DEBUG_FOLDER_NAME` env var:
 ```
-LIVE_DEBUG_FOLDER_NAME=live-debug-test npx live-debug deploy
+LIVE_DEBUG_FOLDER_NAME=live-debug-test npx sls-live-debug deploy
 ```
 
 Create `live-debug.config.ts` in project root:
 ```ts
-import { defineConfig } from '@vitalets/live-debug';
+import { defineConfig } from '@yandex-cloud/sls-live-debug';
 import { Handler } from '@yandex-cloud/function-types';
 
 export default defineConfig({
@@ -66,7 +68,7 @@ export default defineConfig({
 
 Or `live-debug.config.js` (cjs):
 ```js
-const { defineConfig } = require('@vitalets/live-debug');
+const { defineConfig } = require('@yandex-cloud/sls-live-debug');
 
 module.exports = defineConfig({
   handler: event => {
@@ -81,14 +83,17 @@ module.exports = defineConfig({
 
 Run live debug:
 ```
-npx live-debug run
+npx sls-live-debug run
 ```
 Expected output:
 ```
-Reading config: /project/live-debug.config
+Using config: live-debug.config.ts
 Running local client...
+Starting child...
+Child started
+Watching changes in: live-debug.config.ts
 WS connection opened
-Local client connected
+Local client ready.
 Check url: https://**********.apigw.yandexcloud.net
 Waiting requests...
 GET /?
@@ -101,13 +106,13 @@ See [example](/example) for more details.
 > Don't forget to add `.live-debug` dir to `.gitignore`
 
 ## Usage
-All requests on server are handled by single `stub` function.
-You can setup routing for your needs in the config.
+All requests to cloud `stub` function will come to config's handler.
+Inside handler you can setup routing for your needs.
 
 #### Debug single function
-For single function you can just assign handler:
+To debug single function you can just assign handler in config:
 ```ts
-import { defineConfig } from '@vitalets/live-debug';
+import { defineConfig } from '@yandex-cloud/sls-live-debug';
 import { handler } from './path/to/your/handler';
 
 export default defineConfig({
@@ -116,9 +121,9 @@ export default defineConfig({
 ```
 
 #### Debug several functions
-To debug several functions you can setup routing by url:
+To debug several functions you can setup routing inside handler (for example by url):
 ```ts
-import { defineConfig } from '@vitalets/live-debug';
+import { defineConfig } from '@yandex-cloud/sls-live-debug';
 import { Handler } from '@yandex-cloud/function-types';
 import { handlerA } from './path/to/your/handler-a';
 import { handlerB } from './path/to/your/handler-b';
@@ -135,10 +140,10 @@ export default defineConfig({
 ```
 
 #### Debug other triggers
-You can debug all triggers: message queue, object storage, etc.
-In cloud console configure needed trigger to point to `stub` function.
+You can debug all other triggers: message queue, object storage, etc.
+In cloud console configure needed [trigger](https://cloud.yandex.ru/docs/serverless-containers/concepts/trigger/) to point to `stub` function.
 ```ts
-import { defineConfig } from '@vitalets/live-debug';
+import { defineConfig } from '@yandex-cloud/sls-live-debug';
 import { Handler } from '@yandex-cloud/function-types';
 
 export default defineConfig({
@@ -148,5 +153,14 @@ export default defineConfig({
 });
 ```
 
-## Watch mode
-Planned.
+## Watch
+By default process watches changes in `live-debug.config.ts` and updates handler.
+You can set `watch` key in config to watch additional files and directories:
+```ts
+import { defineConfig } from '@yandex-cloud/sls-live-debug';
+
+export default defineConfig({
+  watch: 'src',
+  handler: ...
+});
+```

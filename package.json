@@ -1,5 +1,5 @@
 {
-  "name": "@vitalets/live-debug",
+  "name": "@yandex-cloud/sls-live-debug",
   "description": "Live debug of Yandex cloud functions",
   "version": "1.0.1",
   "bin": {
