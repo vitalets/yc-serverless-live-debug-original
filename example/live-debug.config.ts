@@ -1,6 +1,7 @@
-import { defineConfig } from '../src/client';
-import { handler } from './handler';
+import { defineConfig } from '../src/local-client';
+import { handler } from './src/handler';
 
 export default defineConfig({
-  handler
+  watch: 'src',
+  handler,
 });

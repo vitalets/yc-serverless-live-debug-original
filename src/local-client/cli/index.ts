@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import deploy from './deploy';
@@ -8,3 +10,6 @@ yargs(hideBin(process.argv))
   .command('run', 'Run live-debug', run)
   .demandCommand(1)
   .parse();
+
+  // todo: --config
+  // todo: --outputs

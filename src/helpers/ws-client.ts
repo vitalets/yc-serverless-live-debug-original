@@ -60,7 +60,7 @@ export class WsClient {
   }
 
   async close() {
-    if (this.ws.readyState === WebSocket.OPEN) {
+    if (this.ws?.readyState === WebSocket.OPEN) {
       this.ws.close();
       await once(this.ws, 'close');
     }

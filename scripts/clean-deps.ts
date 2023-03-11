@@ -1,6 +1,9 @@
 /**
  * Generate package.json with excluding dependencies.
  * todo: do it in more smart way
+ * 
+ * Usage:
+ * ts-node [target-dir-for-package.json] [...deps-to-clean]
  */
 import fs from 'node:fs';
 import path from 'node:path';

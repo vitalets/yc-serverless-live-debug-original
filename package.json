@@ -3,9 +3,9 @@
   "description": "Live debug of Yandex cloud functions",
   "version": "1.0.1",
   "bin": {
-    "live-debug": "dist/client/cli/live-debug"
+    "sls-live-debug": "dist/local-client/cli"
   },
-  "main": "dist/client/index.js",
+  "main": "dist/local-client/index.js",
   "files": [
     "dist",
     "README.md",
@@ -13,16 +13,16 @@
   ],
   "scripts": {
     "init": "git config core.hooksPath ./scripts/.hooks",
-    "cdktf:get": "npx cdktf get --output src/cli/.gen",
+    "cdktf:get": "npx cdktf get --output src/local-client/.gen",
     "lint": "eslint src test",
     "lint:fix": "npm run lint -- --fix",
     "test": "LOG_LEVEL=${LOG_LEVEL:-error} mocha -r ts-node/register test/*.spec.ts -t 10000",
     "test:d": "LOG_LEVEL=debug npm t",
-    "example:deploy": "npm run build && pushd example; ./../dist/client/cli/live-debug deploy; popd",
-    "example:run": "npm run build && pushd example; ./../dist/client/cli/live-debug run; popd",
+    "example:deploy": "npm run build && pushd example; ../dist/local-client/cli/index.js deploy; popd",
+    "example:run": "pushd example; ts-node ../src/local-client/cli run; popd",
     "toc": "markdown-toc README.md -i",
     "build": "./scripts/build.sh",
-    "release": "npm run lint && npm run build && npm t && np --yolo --no-release-draft"
+    "release": "./scripts/release.sh"
   },
   "lint-staged": {
     "{src,test}/**/*.ts": "eslint"
@@ -32,29 +32,31 @@
     "@types/ws": "^8.5.4",
     "@types/yargs": "^17.0.22",
     "@yandex-cloud/function-types": "^2.1.0",
-    "@yandex-cloud/nodejs-sdk": "^2.4.1",
+    "@yandex-cloud/nodejs-sdk": "^2.4.2",
     "cdktf": "^0.15.5",
     "cdktf-cli": "^0.15.5",
+    "chokidar": "^3.5.3",
     "console-log-level": "^1.4.1",
-    "constructs": "^10.1.258",
-    "pino-pretty": "^9.3.0",
+    "constructs": "^10.1.274",
+    "pino-pretty": "^9.4.0",
     "ts-node": "^10.9.1",
-    "ws": "^8.12.1",
+    "ws": "^8.13.0",
     "yargs": "^17.7.1",
     "ydb-sdk": "^3.9.0"
   },
   "devDependencies": {
+    "@eslint/js": "^8.36.0",
     "@types/mocha": "^10.0.1",
-    "@types/node": "^18.14.2",
+    "@types/node": "^18.15.0",
     "@types/node-fetch": "^2.6.2",
     "@types/pino-pretty": "^5.0.0",
-    "@typescript-eslint/eslint-plugin": "^5.53.0",
-    "@typescript-eslint/parser": "^5.53.0",
+    "@typescript-eslint/eslint-plugin": "^5.54.1",
+    "@typescript-eslint/parser": "^5.54.1",
     "cross-env": "^7.0.3",
     "dotenv": "^16.0.3",
-    "eslint": "^8.34.0",
+    "eslint": "^8.36.0",
     "globals": "^13.20.0",
-    "lint-staged": "^13.1.2",
+    "lint-staged": "^13.2.0",
     "markdown-toc": "^1.2.0",
     "mocha": "^10.2.0",
     "node-fetch": "^2.6.9",
